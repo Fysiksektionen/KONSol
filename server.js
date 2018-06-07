@@ -4,7 +4,7 @@ const querystring = require('querystring')
 const settings = require('./settings.json')
 const session = require('express-session');
 const CASAuthentication = require('cas-authentication');
-
+const fetch = require('node-fetch')
 let app = express()
 
 const redirect_uri = 
@@ -62,6 +62,31 @@ app.get('/dashboard/media', cas.bounce, function(req, res) {res.send('<p>Media g
 
 // Landing portal.
 app.get('/', function(req, res) {res.send('<h1>Hello, world!</h1><img src="https://i.imgur.com/79DBTgR.jpg" alt="Oops, contact webmaster@f.kth.se"/>')})
+
+app.get('/instagram', function(req, res) {
+    access_token = req.query.access_token || null
+    if (access_token){
+        fetch("https://api.instagram.com/v1/users/self/media/recent/?access_token=" + access_token)
+            .then(response => response.json())
+            .then(json => json.data)
+            .then(posts => posts.map(post => {
+                return {
+                    img: post.images.standard_resolution,
+                    caption: post.caption && post.caption.text
+                }
+            }))
+            .then(media => {
+                // Just a temporary example rendering of the images
+                result = ''
+                for (let i=0; i<media.length;i++){
+                    result+='<img src="'+media[i].img.url+'" alt="Oops, unable to find this image"/>'
+                }
+                res.send(result)
+                // res.render('media', media)
+            })
+            .catch(err => {console.log(err);res.send("500 Oops, something went wrong")})
+    }
+})
 
 
 // ####################################################################

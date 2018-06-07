@@ -5,6 +5,6 @@
     "dev_mode":true,
     "OAuth":{
         "REDIRECT_URI":"http://localhost:8888/callback",
-        "FRONTEND_URI":"http://localhost:8888/"
+        "FRONTEND_URI":"http://localhost:8888/instagram"
     }
 }
