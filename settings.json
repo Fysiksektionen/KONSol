@@ -3,6 +3,8 @@
     "service_url":"http://localhost:8888",
     "cas_url":"https://login.kth.se",
     "dev_mode":true,
+    "dev_mode_user":"fdev",
+    "dev_mode_info":{"givenName":"web","familyName":"grupp","id":"abc1234"},
     "OAuth":{
         "REDIRECT_URI":"http://localhost:8888/callback",
         "FRONTEND_URI":"http://localhost:8888/instagram"
