@@ -20,16 +20,16 @@ app.use( session({
 
 // Create a new instance of CASAuthentication.
 var cas = new CASAuthentication({
-  cas_url         : settings.cas_url,
-  service_url     : settings.service_url,
-  cas_version     : '3.0',
-  renew           : false,
-  is_dev_mode     : false,
-  dev_mode_user   : '',
-  dev_mode_info   : {},
-  session_name    : 'cas_user',
-  session_info    : 'cas_userinfo',
-  destroy_session : false
+  cas_url         : settings.cas_url, // The URL of the CAS server.	
+  service_url     : settings.service_url, //The URL which is registered on the CAS server as a valid service.
+  cas_version     : '3.0', // The CAS protocol version.	
+  renew           : false, // Require the user to login to the CAS server regardless of whether a session exists.
+  is_dev_mode     : settings.dev_mode, // Don't use CAS authentication and the session CAS variable is set to dev_mode_user.
+  dev_mode_user   : '', // The CAS user to use if dev mode is active.
+  dev_mode_info   : {}, // The CAS user information to use if dev mode is active.
+  session_name    : 'cas_user', // The name of the session variable storing the CAS user.	
+  session_info    : 'cas_userinfo', // The name of the session variable storing the CAS user information. 
+  destroy_session : false // Destroy the entire session upon logout or just delete the session variable storing the CAS user.
 });
 
 // ####################################################################
