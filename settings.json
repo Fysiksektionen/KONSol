@@ -1,7 +1,7 @@
 {
     "PORT":"8888",
     "service_url":"http://localhost:8888",
-    "cas_url":"https://login.kth.se/",
+    "cas_url":"https://login.kth.se",
     "OAuth":{
         "REDIRECT_URI":"http://localhost:8888/callback",
         "FRONTEND_URI":"http://localhost:8888/"
