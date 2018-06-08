@@ -17,6 +17,7 @@ app.use( session({
   resave            : false,
   saveUninitialized : true
 }));
+app.use(express.static('public'))
 
 // Create a new instance of CASAuthentication.
 var cas = new CASAuthentication({
@@ -53,19 +54,27 @@ var cas = new CASAuthentication({
 // ####################################################################
 
 // Dashboard is supposed to be the main place where you manage the screen
-app.get( '/dashboard', cas.bounce, function ( req, res ) {
-  res.send( '<html><body>Welcome ' + req.session[cas.session_name] + '!</body></html>' );
+app.get( '/dashboard', cas.bounce, function ( req, res ) { // TODO: USE TEMPLATING
+  res.send( `<html>
+                <head>
+                    <link rel="stylesheet" type="text/css" media="screen" href="style.css"/>
+                </head>
+                <body>
+                    <p>Welcome ` + req.session[cas.session_name] + `!</p>
+                    <a href="/instagram/login" class="btn">Logga in med Instagram</a>
+                </body>
+            </html>` );
 });
 
 // Test route for media content
 app.get('/dashboard/media', cas.bounce, function(req, res) {res.send('<p>Media could go here</p>')})
 
 // Landing portal.
-app.get('/', function(req, res) {res.send('<h1>Hello, world!</h1><img src="https://i.imgur.com/79DBTgR.jpg" alt="Oops, contact webmaster@f.kth.se"/>')})
+app.get('/', (req, res) => res.sendFile('./public/index.html'))
 
 app.get('/instagram', function(req, res) {
     access_token = req.query.access_token || null
-    if (access_token){
+    if (access_token){ // todo: check req.originalUrl, check if recently updated and cached.
         fetch("https://api.instagram.com/v1/users/self/media/recent/?access_token=" + access_token)
             .then(response => response.json())
             .then(json => json.data)
@@ -84,7 +93,7 @@ app.get('/instagram', function(req, res) {
                 res.send(result)
                 // res.render('media', media)
             })
-            .catch(err => {console.log(err);res.send("500 Oops, something went wrong")})
+            .catch(err => {console.log(err);res.sendStatus(500)})
     }
 })
 
