@@ -3,8 +3,10 @@
 En express-app för att manuellt styra skärmen i Konsulatet.
 
 ## Installation
-Kör följande kommando i rot-directoryn (`/KONSol/`)
+Kör följande kommandon i den mappen du vill ha projektet.
 
+    $ git clone https://github.com/Acksell/KONSol.git
+    $ cd KONSol
     $ npm install
 
 ## Användning
