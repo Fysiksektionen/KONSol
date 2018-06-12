@@ -3,6 +3,9 @@
 En express-app för att manuellt styra skärmen i Konsulatet.
 
 ## Installation
+
+Appen förutsätter att du kör en mongodb instans på mongodb://localhost:27017/KONSol (går att konfigurera i settings.json).
+
 Kör följande kommandon i den mappen du vill ha projektet.
 
     $ git clone https://github.com/Acksell/KONSol.git
@@ -10,6 +13,8 @@ Kör följande kommandon i den mappen du vill ha projektet.
     $ npm install
 
 ## Användning
+
+Appen förutsätter att du kör en mongodb instans på mongodb://localhost:27017/KONSol (går att konfigurera i settings.json).
 
 För att använda Instagram-OAuth måste du först skapa en app på 
 https://www.instagram.com/developer/clients/manage/. Som `redirect_uri` i registreringen måste 

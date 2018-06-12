@@ -5,6 +5,13 @@ const settings = require('./settings.json')
 const session = require('express-session');
 const CASAuthentication = require('cas-authentication');
 const fetch = require('node-fetch')
+const Slide = require('./models/slide.js')
+const mongoose = require('mongoose')
+const bodyParser = require('body-parser')
+const checkAdminRights = require('./helpers').checkAdminRights
+
+mongoose.Promise = Promise
+
 let app = express()
 
 const redirect_uri = 
@@ -18,7 +25,7 @@ app.use( session({
   saveUninitialized : true
 }));
 app.use(express.static('public'))
-
+app.use(bodyParser.json())
 // Create a new instance of CASAuthentication.
 var cas = new CASAuthentication({
   cas_url         : settings.cas_url, // The URL of the CAS server.	
@@ -37,45 +44,51 @@ var cas = new CASAuthentication({
 //            Main routes
 // ####################################################################
 
-/*CAS Authentication middleware
-
-  cas.bounce: Unauthenticated clients will be redirected to the CAS login and then back to
+/*CAS Authentication functions
+Middleware:
+-  cas.bounce: Unauthenticated clients will be redirected to the CAS login and then back to
               the route once authenticated.
 
-  cas.block:  Unauthenticated clients will receive a 401 Unauthorized response instead of data.
+-  cas.block:  Unauthenticated clients will receive a 401 Unauthorized response instead of data.
 
-  cas.bounce_redirect: 
+Endpoint functions:
+-  cas.bounce_redirect: 
               Unauthenticated clients will be redirected to the CAS login and then to the
               provided "redirectTo" query parameter once authenticated (only used in login flow).
   
-  cas.logout: De-authenticate the client with the Express server and then            
+-  cas.logout: De-authenticate the client with the Express server and then            
               redirect the client to the CAS logout page.
 */
 // ####################################################################
 
 // Dashboard is supposed to be the main place where you manage the screen
 app.get( '/dashboard', cas.bounce, function ( req, res ) { // TODO: USE TEMPLATING
-  res.send( `<html>
-                <head>
-                    <link rel="stylesheet" type="text/css" media="screen" href="style.css"/>
-                </head>
-                <body>
-                    <p>Welcome ` + req.session[cas.session_name] + `!</p>
-                    <a href="/instagram/login" class="btn">Logga in med Instagram</a>
-                </body>
-            </html>` );
+    res.send( `<html>
+                    <head>
+                        <link rel="stylesheet" type="text/css" media="screen" href="style.css"/>
+                    </head>
+                    <body>
+                        <div class="greeting">
+                            <p>Welcome ` + req.session[cas.session_name] + `!</p>
+                            <a href="/instagram/login" class="btn">Logga in med Instagram</a>
+                        </div>
+                    </body>
+                </html>` );
 });
-
-// Test route for media content
-app.get('/dashboard/media', cas.bounce, function(req, res) {res.send('<p>Media could go here</p>')})
 
 // Landing portal.
 app.get('/', (req, res) => res.sendFile('./public/index.html'))
 
-app.get('/instagram', function(req, res) {
+app.get('/instagram', cas.block, function(req, res) {
     access_token = req.query.access_token || null
     if (access_token){ // todo: check req.originalUrl, check if recently updated and cached.
         fetch("https://api.instagram.com/v1/users/self/media/recent/?access_token=" + access_token)
+            .then(response => {
+                if (response.status === 200){
+                    // User.cacheToken(access_token)
+                }
+                return response
+            })
             .then(response => response.json())
             .then(json => json.data)
             .then(posts => posts.map(post => {
@@ -92,8 +105,11 @@ app.get('/instagram', function(req, res) {
                 }
                 res.send(result)
                 // res.render('media', media)
+                return media
             })
-            .catch(err => {console.log(err);res.sendStatus(500)})
+            // .then(media => User.cacheInstagram(app.locals.db, media))
+            .catch(err => {console.log(err);res.sendStatus(500)}
+        )
     }
 })
 
@@ -105,13 +121,56 @@ app.get('/instagram', function(req, res) {
 // Unauthenticated clients will receive a 401 Unauthorized response instead of
 // the JSON data.
 app.get( '/api', cas.block, function ( req, res ) {
-  res.json( { success: true } );
+    res.json( { success: true } );
 });
 
 // An example of accessing the CAS user session variable. This could be used to
 // retrieve your own local user records based on authenticated CAS username.
 app.get( '/api/user', cas.block, function ( req, res ) {
-  res.json( { cas_user: req.session[ cas.session_name ] } );
+    // At the moment only returns the username of the logged in user.
+    res.json( { cas_user: req.session[ cas.session_name ] } );
+});
+
+// PUBLIC IN ORDER FOR RASPBERRY PI TO ACCESS IT.
+app.get('/api/screen/slides', function(req, res) {
+    // Return all slides
+    Slide.find().then(result => res.json(result))
+});
+
+app.post('/api/screen/slides/create', cas.block, checkAdminRights(cas), function(req, res) {
+    // Save new slide.
+    if (!req.body) return res.sendStatus(400)
+    Slide.create(req.body)
+        .then(slide => {res.status(201).res.json({"ok":true, slide})})
+        .catch(err => {
+            if (err instanceof mongoose.Error.ValidationError){
+                res.status(400)
+                res.json({'message':'Validation failed',status:400,ok:false,errorName:'ValidationError',errors:err.errors})
+            }
+            else {
+                // Can we catch any other known errors here? Either way we should log it.
+                // This is the downside to not using an error library.
+                // log(err.message, err.errors)
+                res.sendStatus(500)
+            }
+        })
+});
+
+app.get('/api/screen/slides/:id', cas.block, function(req, res) {
+    Slide.find({_id:req.params.id}).then(slide => res.json(slide))
+});
+
+// Currently a POST without a body. Could make the id a required part of the request body
+// and simply make the route [...]/remove.
+app.post('/api/screen/slides/remove/:id', cas.block, checkAdminRights(cas), function(req, res) {
+    // Status is {"ok":1, "n":1} if all went well.
+    if (mongoose.Types.ObjectId.isValid(req.params.id)) {
+        Slide.deleteOne({_id:req.params.id}).then(status => res.json(status))
+    }
+    else { // should this be a 200 with json response {"ok":true, "n":0}?
+        res.status(400)
+        res.json({'message':'Could not find given id', status: 400, ok: false})
+    }
 });
 
 // ####################################################################
@@ -134,7 +193,7 @@ app.get( '/logout', cas.logout );
    Instagram redirects to the redirect_uri (/callback) provided when registering the app,
    but with a ?code= query parameter.
 */
-app.get('/instagram/login', function(req, res) {
+app.get('/instagram/login', cas.block, function(req, res) {
     res.redirect('https://api.instagram.com/oauth/authorize/?' +
         querystring.stringify({
             response_type: 'code',
@@ -177,5 +236,11 @@ app.get('/callback', function(req, res) {
 //            Launch app to port 8888
 // ####################################################################
 const PORT = settings.PORT || 8888
-console.log(`Listening on port ${PORT}. `)
-app.listen(PORT)
+mongoose.connect(settings.DB_URL)
+const db = mongoose.connection
+
+db.on('error', console.error.bind(console, 'MongoDB connection error:'));
+db.once('open', () => {
+    app.locals.db = db;
+    app.listen(PORT, () => {console.log(`Listening on port ${PORT}.`)})
+})
