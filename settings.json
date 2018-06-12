@@ -8,7 +8,7 @@
     "dev_mode_user":"fdev",
     "dev_mode_info":{"givenName":"web","familyName":"grupp","id":"abc1234"},
     "OAuth":{
-        "REDIRECT_URI":"http://localhost:8888/callback",
+        "REDIRECT_URI":"http://localhost:8888/instagram/callback",
         "FRONTEND_URI":"http://localhost:8888/instagram"
     },
     "admin_users":[
