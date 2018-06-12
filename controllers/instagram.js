@@ -40,6 +40,9 @@ exports.getMedia = function(req, res) {
             .catch(err => {console.log(err);res.sendStatus(500)}
         )
     }
+    else {
+        res.redirect('/instagram/login')
+    }
 }
 
 // ####################################################################
