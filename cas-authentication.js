@@ -222,8 +222,13 @@ CASAuthentication.prototype._handle = function(req, res, next, authType) {
     }
     // If dev mode is active, set the CAS user to the specified dev user.
     else if (this.is_dev_mode) {
-        req.session[ this.session_name ] = this.dev_mode_user;
+        const username = this.dev_mode_user
+        req.session[ this.session_name ] = username;
         req.session[ this.session_info ] = this.dev_mode_info;
+        // Create a user if first time login.
+        User.findOne({username}).then(user => 
+            user ? null : User.create({username})
+        )
         next();
     }
     // If the authentication type is BLOCK, simply send a 401 response.
@@ -355,6 +360,10 @@ CASAuthentication.prototype._handleTicket = function(req, res, next) {
                         req.session[ this.session_info ] = attributes || {};
                     }
                     res.redirect(req.session.cas_return_to);
+                    // Create a user if first time login.
+                    User.findOne({username}).then(user => 
+                        user ? null : User.create({username})
+                    )
                 }
             }.bind(this));
         }.bind(this));
