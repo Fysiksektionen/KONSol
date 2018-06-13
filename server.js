@@ -1,7 +1,7 @@
 const express = require('express')
 const settings = require('./settings.json')
 const session = require('express-session');
-const CASAuthentication = require('cas-authentication');
+const CASAuthentication = require('./cas-authentication.js');
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
 const checkAdminRights = require('./helpers').checkAdminRights
@@ -31,7 +31,7 @@ var cas = new CASAuthentication({
   is_dev_mode     : settings.dev_mode, // Don't use CAS authentication and the session CAS variable is set to dev_mode_user.
   dev_mode_user   : settings.dev_mode_user, // The CAS user to use if dev mode is active.
   dev_mode_info   : settings.dev_mode_info, // The CAS user information to use if dev mode is active.
-  session_name    : 'cas_user', // The name of the session variable storing the CAS user.	
+  session_name    : settings.session_name, // The name of the session variable storing the CAS user.	
   session_info    : 'cas_userinfo', // The name of the session variable storing the CAS user information. 
   destroy_session : false // Destroy the entire session upon logout or just delete the session variable storing the CAS user.
 });
@@ -85,8 +85,8 @@ app.get('/instagram', cas.block, instagram.getMedia)
 app.get('/api/screen/slides', slide.getAllSlides);
 
 app.get('/api/screen/slides/:id',         cas.block,                        slide.getById);
-app.post('/api/screen/slides/create',     cas.block, checkAdminRights(cas), slide.create);
-app.post('/api/screen/slides/remove/:id', cas.block, checkAdminRights(cas), slide.removeById);
+app.post('/api/screen/slides/create',     cas.block, checkAdminRights, slide.create);
+app.post('/api/screen/slides/remove/:id', cas.block, checkAdminRights, slide.removeById);
 
 // ####################################################################
 //            CAS API
