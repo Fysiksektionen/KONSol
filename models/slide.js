@@ -2,20 +2,21 @@ const mongoose = require('mongoose')
 const Schema = mongoose.Schema
 
 const slideSchema = new Schema({
-    name:String,
     url: {
-        type:String,
-        required:true
+        type: String,
+        required: true,
+        unique: true
     },
-    caption:String,
-    tags:[String],
-    start: {
-        type: Date,
-        required: true
-    },
+    caption: String,
+    tags: [String],
+    start: Date,
     end: Date,
+    visible: {
+        type: Boolean,
+        default: false
+    },
     created: {
-        type: Date,
+        type: Number,
         default: Date.now
     }
     // user implementation
@@ -25,11 +26,20 @@ const slideSchema = new Schema({
     // }
 })
 
-// slideSchema.pre('save', function(next) {
-//     // Names are case-insensitive, so store them
-//     // in lowercase:
-//     this.name = this.name.toLowerCase();
-//     next();
-// });
+slideSchema.statics.createFromIG = function (IGposts){
+    return IGposts.map(post => this.findOne({url:post.url}).then(slide => {
+        if(!slide) { // If not already created; avoids duplicate key error
+            return this.create(post)
+        }
+        else {
+            return Promise.resolve(slide)
+        }
+    }))
+}
+
+slideSchema.methods.toggleVisibility = function() {
+    this.set({visible : !this.visible})
+    return this.save()
+}
 
 module.exports = mongoose.model('Slide', slideSchema)

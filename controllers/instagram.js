@@ -2,47 +2,63 @@ const fetch = require('node-fetch')
 const querystring = require('querystring')
 const request = require('request')
 const settings = require('../settings.json')
-// const User = require('../models/user')
+const User = require('../models/user.js')
+const Slide = require('../models/slide.js')
 
 const redirect_uri = 
     settings.OAuth.REDIRECT_URI || 
     'http://localhost:8888/callback'
 
+// Temporary rendering with HTML.
+const simpleRender = media => {
+    html = `<link rel="stylesheet" type="text/css" media="screen" href="style.css" />
+            <a href="/instagram?update=true" class="btn">Uppdatera</a>`
+    for (let i=0; i<media.length;i++){
+        html += '<img src="' + media[i].url + '" alt="Oops, unable to find this image"/>'
+    }
+    return html
+}
+
+// Helper function
+const fetchMedia = access_token => 
+    fetch("https://api.instagram.com/v1/users/self/media/recent/?access_token=" + access_token)
+    .then(response => response.json())
+    .then(json => json.data)
+    .then(posts => posts.map(post => {
+        return {
+            url: post.images.standard_resolution.url,
+            caption: post.caption && post.caption.text,
+            created: post.created_time*1000 // *1000 for milliseconds and integer.
+        }
+    }))
+
+
+// Returns the stored slides if not explicitly told to update.
+// If update query is specified, fetch and store new media. Caches access token.
 exports.getMedia = function(req, res) {
-    access_token = req.query.access_token || null
-    if (access_token){ // todo: check req.originalUrl, check if recently updated and cached.
-        fetch("https://api.instagram.com/v1/users/self/media/recent/?access_token=" + access_token)
-            .then(response => {
-                if (response.status === 200){
-                    // User.cacheToken(access_token)
-                }
-                return response
-            })
-            .then(response => response.json())
-            .then(json => json.data)
-            .then(posts => posts.map(post => {
-                return {
-                    img: post.images.standard_resolution,
-                    caption: post.caption && post.caption.text
-                }
-            }))
-            .then(media => {
-                // Just a temporary example rendering of the images
-                result = ''
-                for (let i=0; i<media.length;i++){
-                    result+='<img src="'+media[i].img.url+'" alt="Oops, unable to find this image"/>'
-                }
-                res.send(result)
-                // res.render('media', media)
-                return media
-            })
-            // .then(media => User.cacheInstagram(app.locals.db, media))
-            .catch(err => {console.log(err);res.sendStatus(500)}
-        )
-    }
-    else {
-        res.redirect('/instagram/login')
-    }
+    User.findOne({username: req.session[settings.session_name]}).then(user => {
+        const access_token = req.query.access_token || user.cached_ig_access_token || null
+        if (!req.query.access_token && !req.query.update){
+            // just send all slides
+            Slide.find().then(slides => res.send(simpleRender(slides)))
+        }
+        else {
+            console.log('updating')
+            if (access_token){
+                fetchMedia(access_token)
+                .then(media => {
+                    // All went well, cache access token and media.
+                    res.send(simpleRender(media))
+                    user.cacheToken(access_token)
+                    Slide.createFromIG(media)
+                })
+                .catch(err => {console.log("GOTCHA", err);res.sendStatus(500)})
+            }
+            else {
+                res.redirect('/instagram/login')
+            }
+        }
+    })
 }
 
 // ####################################################################
