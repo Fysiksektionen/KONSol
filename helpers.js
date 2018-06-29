@@ -22,3 +22,15 @@ exports.checkAdminRights = function(req, res, next){
         })
     }
 }
+
+exports.validCharacters = function(filename){
+    // Returns true if the filename contains only whitelist characters, false otherwise.
+    const whitelist = ".abcdefghijklmnopqrstuvwxyzåäöøæ0123456789"
+    const name = filename.toLowerCase()
+    let i
+    for (i=0; i < filename.length; i++){
+        if (whitelist.includes(name[i])) continue
+        else return false
+    }
+    return true
+}

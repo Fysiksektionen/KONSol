@@ -29,6 +29,10 @@ p {
     font-family: Lato;
     text-align: center;
     position: fixed;
-    top: 1%;
+    top: 4%;
     left: 1%;
+}
+
+.upload {
+    height: 50px;
 }

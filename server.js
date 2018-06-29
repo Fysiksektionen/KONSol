@@ -1,15 +1,57 @@
-const express = require('express')
-const settings = require('./settings.json')
-const session = require('express-session');
+// ####################################################################
+//            Dependencies
+// ####################################################################
+const express =           require('express')
+const settings =          require('./settings.json')
+const session =           require('express-session');
 const CASAuthentication = require('./cas-authentication.js');
-const mongoose = require('mongoose')
-const bodyParser = require('body-parser')
-const checkAdminRights = require('./helpers').checkAdminRights
-const instagram = require('./controllers/instagram.js')
-const slide = require('./controllers/slide.js')
+const mongoose =          require('mongoose')
+const bodyParser =        require('body-parser')
 
+// #File uploading dependencies
+const path =     require('path')
+const fileType = require('file-type')
+const multer =   require('multer')
+
+// #Controllers
+const instagram = require('./controllers/instagram.js')
+const slide =     require('./controllers/slide.js')
+
+// #Helpers
+const checkAdminRights = require('./helpers').checkAdminRights
+const validCharacters =  require('./helpers').validCharacters
+
+// ####################################################################
+//            Application setup
+// ####################################################################
+
+// #Multer setup
+const fileFilter = function (req, file, cb){
+    // Not sure how much these checks matter since we're not storing the files by their original name anyways
+    // but there's no such thing as too thorough when it comes to accepting files from users.
+    const extension = path.extname(file.originalname)
+    const only_one_dot = file.originalname.split('.').length === 2
+    const valid_file_extension = ['.png','.jpg','.jpeg','.gif'].includes(extension)
+    const valid_mimetype = file.mimetype.startsWith('image/')
+    const alphanumeric_name = validCharacters(file.originalname)
+    const valid = only_one_dot && valid_file_extension && valid_mimetype && alphanumeric_name
+    if (valid){
+        cb(null, valid)
+    }
+    else if (!only_one_dot || !alphanumeric_name) 
+        cb(new Error("Invalid name, only alphanumeric name with a file extension allowed."))
+    else if (!valid_file_extension) 
+        cb(new Error("Invalid file extension"))
+    else if (!valid_mimetype) 
+        cb(new Error("Invalid mimetype"))
+}
+let storage = multer.memoryStorage()
+const uploadSlideImage = multer({fileFilter, storage}).single('slide_img') // slide_img is the name field in html <input>.
+
+// #Mongoose setup
 mongoose.Promise = Promise
 
+// #Express setup
 let app = express()
 
 // Set up an Express session, which is required for CASAuthentication.
@@ -19,11 +61,11 @@ app.use( session({
   saveUninitialized : true
 }));
 
-app.use(express.static('public'))
+app.use(express.static('public')) // amongst other things, this automaps index.html to root route '/'
 app.use(bodyParser.json())
 
 // Create a new instance of CASAuthentication.
-var cas = new CASAuthentication({
+let cas = new CASAuthentication({
   cas_url         : settings.cas_url, // The URL of the CAS server.	
   service_url     : settings.service_url, //The URL which is registered on the CAS server as a valid service.
   cas_version     : '3.0', // The CAS protocol version.	
@@ -59,21 +101,30 @@ Endpoint functions:
 
 // Dashboard is supposed to be the main place where you manage the screen
 app.get( '/dashboard', cas.bounce, function ( req, res ) { // TODO: USE TEMPLATING
-    res.send( `<html>
-                    <head>
-                        <link rel="stylesheet" type="text/css" media="screen" href="style.css"/>
-                    </head>
-                    <body>
-                        <div class="greeting">
-                            <p>Welcome ` + req.session[cas.session_name] + `!</p>
-                            <a href="/instagram/login" class="btn">Logga in med Instagram</a>
-                        </div>
-                    </body>
-                </html>` );
+    res.sendFile('public/dashboard.html', {root:__dirname});
 });
 
-// Landing portal.
-app.get('/', (req, res) => res.sendFile('./public/index.html'))
+app.post('/upload', function(req,res){
+    uploadSlideImage(req, res, function (err) {
+        if (err) {
+          // An error occurred when uploading
+          console.log(err)
+          return res.status(400).json({ok:false, message:err.message})
+        }
+        const filetype = fileType(req.file.buffer)
+        switch (filetype.ext){
+            case 'png': break// controllers.pngUpload(req,res)
+            case 'gif': break// controllers.gifUpload(req,res)
+            case 'jpg': break// controllers.jpgUpload(req,res)
+            default:
+                return res.status(400).json({ok:false,message:"Invalid file format, must be a png, gif or jpg file."})
+        }
+        // Everything went fine
+        // return the url of resource created.
+        randomId = Date.now() //temporary
+        res.status(201).json({ok:true, url: settings.service_url + '/' + randomId}) 
+      })
+})
 
 app.get('/instagram', cas.block, instagram.getMedia)
 
@@ -83,8 +134,7 @@ app.get('/instagram', cas.block, instagram.getMedia)
 
 // PUBLIC IN ORDER FOR RASPBERRY PI TO ACCESS IT.
 app.get('/api/screen/slides', slide.getAllSlides);
-
-app.get('/api/screen/slides/:id',         cas.block,                        slide.getById);
+app.get('/api/screen/slides/:id',         cas.block,                   slide.getById);
 app.post('/api/screen/slides/create',     cas.block, checkAdminRights, slide.create);
 app.post('/api/screen/slides/remove/:id', cas.block, checkAdminRights, slide.removeById);
 
