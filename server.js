@@ -16,6 +16,7 @@ const multer =   require('multer')
 // #Controllers
 const instagram = require('./controllers/instagram.js')
 const slide =     require('./controllers/slide.js')
+const upload =    require('./controllers/upload.js')
 
 // #Helpers
 const checkAdminRights = require('./helpers').checkAdminRights
@@ -32,7 +33,7 @@ const fileFilter = function (req, file, cb){
     const extension = path.extname(file.originalname)
     const only_one_dot = file.originalname.split('.').length === 2
     const valid_file_extension = ['.png','.jpg','.jpeg','.gif'].includes(extension)
-    const valid_mimetype = file.mimetype.startsWith('image/')
+    const valid_mimetype = ['image/png','image/jpeg','image/gif'].includes(file.mimetype)
     const alphanumeric_name = validCharacters(file.originalname)
     const valid = only_one_dot && valid_file_extension && valid_mimetype && alphanumeric_name
     if (valid){
@@ -45,6 +46,7 @@ const fileFilter = function (req, file, cb){
     else if (!valid_mimetype) 
         cb(new Error("Invalid mimetype"))
 }
+
 let storage = multer.memoryStorage()
 const uploadSlideImage = multer({fileFilter, storage}).single('slide_img') // slide_img is the name field in html <input>.
 
@@ -111,19 +113,19 @@ app.post('/upload', function(req,res){
           console.log(err)
           return res.status(400).json({ok:false, message:err.message})
         }
-        const filetype = fileType(req.file.buffer)
-        switch (filetype.ext){
-            case 'png': break// controllers.pngUpload(req,res)
-            case 'gif': break// controllers.gifUpload(req,res)
-            case 'jpg': break// controllers.jpgUpload(req,res)
-            default:
-                return res.status(400).json({ok:false,message:"Invalid file format, must be a png, gif or jpg file."})
+        // temporary, handles null file uploads until sockets are implemented, shouldn't send user to /upload at all
+        else if (!req.file) res.status(400).redirect(req.headers['referer'])
+        else {
+            const filetype = fileType(req.file.buffer)
+            switch (filetype.ext){
+                case 'png': return upload.pngUpload(req, res)
+                case 'gif': return upload.gifUpload(req, res)
+                case 'jpg': return upload.jpgUpload(req, res)
+                default:
+                    return res.status(400).json({ok:false,message:"Invalid file format, must be a png, gif or jpg file."})
+            }
         }
-        // Everything went fine
-        // return the url of resource created.
-        randomId = Date.now() //temporary
-        res.status(201).json({ok:true, url: settings.service_url + '/' + randomId}) 
-      })
+    })
 })
 
 app.get('/instagram', cas.block, instagram.getMedia)
