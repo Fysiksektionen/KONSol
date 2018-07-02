@@ -4,7 +4,7 @@
 const express =           require('express')
 const settings =          require('./settings.json')
 const session =           require('express-session');
-const CASAuthentication = require('./cas-authentication.js');
+const CASAuthentication = require('./lib/cas-authentication.js');
 const mongoose =          require('mongoose')
 const bodyParser =        require('body-parser')
 
