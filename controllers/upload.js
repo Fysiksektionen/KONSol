@@ -3,6 +3,7 @@ const path = require('path')
 const GIFEncoder = require('gif-stream/encoder')
 const GIFDecoder = require('gif-stream/decoder')
 const gifParser = require('../image_parsers/gif/gify.js')
+const PNG = require('pngjs').PNG
 const settings = require('../settings.json')
 const stream = require('stream') // for turning Buffer to stream for the pipe API.
 
@@ -38,16 +39,58 @@ exports.gifUpload = function(req, res) {
             .pipe(fs.createWriteStream(filepath))   // write sanitised file to filepath
             .on('error', function(err){
                 console.log("ERROR:" + err);
-                return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
+                res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
             })
             .on('finish', function(){
                 // once resource is created send the id of it.
-                return res.status(201).json({ok:true, id: fileId})
+                res.status(201).json({ok:true, id: fileId})
             })
     }
     else return res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
 }
 
-exports.pngUpload = function(req, res) {}
+exports.pngUpload = function(req, res) {
+    // create new read and write stream in order to push buffer to it.
+    streamFromBuffer = new stream.Duplex()
+    streamFromBuffer.push(req.file.buffer)
+    streamFromBuffer.push(null)
+
+    // we can now use the pipe API.
+    streamFromBuffer.pipe(new PNG())
+        .on('error', function(err){
+            res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
+        })
+        .on('parsed', function(data){
+            // Fill new PNG with the pixel data of the user PNG
+            // in order to avoid hidden malicous code in PNG tEXt chunks or metadata.
+            let cleanPng = new PNG({
+                height:this.height,
+                width:this.width,
+                filterType: this.filterType || -1
+            })
+            for (var y = 0; y < this.height; y++) {
+                for (var x = 0; x < this.width; x++) {
+                    var idx = (this.width * y + x) << 2;
+                    cleanPng.data[idx  ] = data[idx  ];
+                    cleanPng.data[idx+1] = data[idx+1];
+                    cleanPng.data[idx+2] = data[idx+2];
+                    cleanPng.data[idx+3] = data[idx+3];
+                }
+            }
+            // Write to filesystem
+            const fileId = randomId()
+            const filepath = path.join(settings.uploads_path, fileId + '.png')
+            cleanPng.pack().pipe(fs.createWriteStream(filepath))
+                .on('error', function(err){
+                    console.log("ERROR:" + err);
+                    res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
+                })
+                .on('finish', function(){
+                    // once resource is created send the id of it.
+                    res.status(201).json({ok:true, id: fileId})
+                })
+        })
+}
+
 exports.jpgUpload = function(req, res) {}
 
