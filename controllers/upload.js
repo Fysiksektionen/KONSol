@@ -4,6 +4,7 @@ const GIFEncoder = require('gif-stream/encoder')
 const GIFDecoder = require('gif-stream/decoder')
 const gifParser = require('../lib/gify.js')
 const PNG = require('pngjs').PNG
+const jpeg = require('jpeg-js')
 const settings = require('../settings.json')
 const stream = require('stream') // for turning Buffer to stream for the pipe API.
 
@@ -92,5 +93,28 @@ exports.pngUpload = function(req, res) {
         })
 }
 
-exports.jpgUpload = function(req, res) {}
+exports.jpgUpload = function(req, res) {
+    const jpegData
+    try {
+        jpegData = jpeg.decode(req.file.buffer)
+    }
+    catch(err) {
+        // jpeg-js doesn't have custom errors so we just catch every possibly error thrown.
+        res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
+    }
+    // quality: 1-100 is vaguely how closely approximated the reencoded data is 
+    // to the original. 100 being best approximation.
+    const quality = 100
+    const newJpeg = jpeg.encode(jpegData, quality)
+
+    const fileId = randomId()
+    const filepath = path.join(settings.uploads_path, fileId + '.jpg')
+    fs.writeFile(filepath, newJpeg.data, (err) => {
+        if (err){
+            console.log("ERROR:", err)
+            return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
+        }
+        res.status(201).json({ok:true, id: fileId})
+    })
+}
 
