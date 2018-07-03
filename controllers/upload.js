@@ -6,16 +6,45 @@ const gifParser = require('../lib/gify.js')
 const PNG = require('pngjs').PNG
 const jpeg = require('jpeg-js')
 const settings = require('../settings.json')
-const stream = require('stream') // for turning Buffer to stream for the pipe API.
+const Stream = require('stream') // for turning Buffer to stream for the pipe API.
+const Slide = require('../models/slide.js')
+const errorHandlers = require('../errors/errorHandlers.js')
 
 const crypto = require('crypto')
+
+// ################
+// Helper functions
+// ################
+
 const randomId = function () {
     return crypto.randomBytes(16).toString('hex')
 }
 
-const getFilepath = function (fileId, extension){
-    return path.join(settings.uploads_path, fileId + extension)
+const getFilepath = function (fileInfo, format){
+    // if format === 'url' then return an url to the resource.
+    // else return the filesystem path to the file.
+    const base = format === 'url' ? path.join(settings.service_url,'uploads') : settings.uploads_path
+    return path.join(base, fileInfo.id + fileInfo.extension)
 }
+
+const writeAndStore = function(fileInfo, stream, callback){
+    stream.pipe(fs.createWriteStream(getFilepath(fileInfo)))
+        .on('error', callback)
+        .on('finish', function(){
+            // once resource is created send the id of it.
+            callback(null, Slide.create({url: getFilepath(fileInfo, 'url')}))
+        })
+}
+const streamFromBuffer = function(buffer){
+    stream = new Stream.Duplex()
+    stream.push(buffer)
+    stream.push(null)
+    return stream
+}
+
+// ##################
+// Upload controllers
+// ##################
 
 exports.gifUpload = function(req, res) {
     // Note: this allows files with arbitrary content after EOF, should make a new gif file after decoding it
@@ -29,39 +58,30 @@ exports.gifUpload = function(req, res) {
     const no_comments_or_text = gif.images.reduce(reducer, true)
 
     if (gif.valid && gif.images && gif.height && gif.width && no_comments_or_text){
-        // TODO: store file 
-        const fileId = randomId()
-        const filepath = getFilepath(fileId, '.gif')
-
+        const fileInfo = {id: randomId(), extension: '.gif'}
         // create new read and write stream in order to push buffer to it.
-        streamFromBuffer = new stream.Duplex()
-        streamFromBuffer.push(req.file.buffer)
-        streamFromBuffer.push(null)
-        // we can now use the pipe API.
-        streamFromBuffer
+        const stream = streamFromBuffer(req.file.buffer)
             .pipe(new GIFDecoder({indexed: true}))  // decode gif
-            .pipe(new GIFEncoder)                   // reencode gif to get rid of malicious code after EOF
-            .pipe(fs.createWriteStream(filepath))   // write sanitised file to filepath
-            .on('error', function(err){
-                console.log("ERROR:" + err);
-                res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
-            })
-            .on('finish', function(){
-                // once resource is created send the id of it.
-                res.status(201).json({ok:true, id: fileId})
-            })
+            .pipe(new GIFEncoder) // reencode gif to get rid of malicious code after EOF
+
+        writeAndStore(fileInfo, stream, function(err, slidePromise){
+            if (err) {
+                return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
+            }
+            slidePromise
+                .then(slide => res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), slide}))
+                .catch(errorHandlers.CreationError(req, res)) // should maybe do some cleanup and remove the file?
+        })
     }
     else return res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
 }
 
 exports.pngUpload = function(req, res) {
+    const fileInfo = {id: randomId(), extension: '.png'}    
     // create new read and write stream in order to push buffer to it.
-    streamFromBuffer = new stream.Duplex()
-    streamFromBuffer.push(req.file.buffer)
-    streamFromBuffer.push(null)
-
+    const stream = streamFromBuffer(req.file.buffer)
     // we can now use the pipe API.
-    streamFromBuffer.pipe(new PNG())
+    stream.pipe(new PNG())
         .on('error', function(err){
             res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
         })
@@ -83,22 +103,19 @@ exports.pngUpload = function(req, res) {
                 }
             }
             // Write to filesystem
-            const fileId = randomId()
-            const filepath = getFilepath(fileId, '.png')
-            cleanPng.pack().pipe(fs.createWriteStream(filepath))
-                .on('error', function(err){
-                    console.log("ERROR:" + err);
-                    res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
-                })
-                .on('finish', function(){
-                    // once resource is created send the id of it.
-                    res.status(201).json({ok:true, id: fileId})
-                })
+            writeAndStore(fileInfo, stream, function(err, slidePromise){
+                if (err) {
+                    return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
+                }
+                slidePromise
+                    .then(slide => res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), slide}))
+                    .catch(errorHandlers.CreationError(req, res)) // should maybe do some cleanup and remove the file?
+            })
         })
 }
 
 exports.jpgUpload = function(req, res) {
-    const jpegData
+    let jpegData
     try {
         jpegData = jpeg.decode(req.file.buffer)
     }
@@ -111,14 +128,13 @@ exports.jpgUpload = function(req, res) {
     const quality = 100
     const newJpeg = jpeg.encode(jpegData, quality)
 
-    const fileId = randomId()
-    const filepath = getFilepath(fileId, '.jpg')
-    fs.writeFile(filepath, newJpeg.data, (err) => {
+    const fileInfo = {id: randomId(), extension: '.jpg'}
+    fs.writeFile(getFilepath(fileInfo), newJpeg.data, (err) => {
         if (err){
             console.log("ERROR:", err)
             return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
         }
-        res.status(201).json({ok:true, id: fileId})
+        res.status(201).json({ok:true, id: fileInfo.id})
     })
 }
 
