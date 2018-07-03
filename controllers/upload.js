@@ -13,6 +13,10 @@ const randomId = function () {
     return crypto.randomBytes(16).toString('hex')
 }
 
+const getFilepath = function (fileId, extension){
+    return path.join(settings.uploads_path, fileId + extension)
+}
+
 exports.gifUpload = function(req, res) {
     // Note: this allows files with arbitrary content after EOF, should make a new gif file after decoding it
     //       and write only that content.
@@ -27,7 +31,7 @@ exports.gifUpload = function(req, res) {
     if (gif.valid && gif.images && gif.height && gif.width && no_comments_or_text){
         // TODO: store file 
         const fileId = randomId()
-        const filepath = path.join(settings.uploads_path, fileId + '.gif')
+        const filepath = getFilepath(fileId, '.gif')
 
         // create new read and write stream in order to push buffer to it.
         streamFromBuffer = new stream.Duplex()
@@ -80,7 +84,7 @@ exports.pngUpload = function(req, res) {
             }
             // Write to filesystem
             const fileId = randomId()
-            const filepath = path.join(settings.uploads_path, fileId + '.png')
+            const filepath = getFilepath(fileId, '.png')
             cleanPng.pack().pipe(fs.createWriteStream(filepath))
                 .on('error', function(err){
                     console.log("ERROR:" + err);
@@ -108,7 +112,7 @@ exports.jpgUpload = function(req, res) {
     const newJpeg = jpeg.encode(jpegData, quality)
 
     const fileId = randomId()
-    const filepath = path.join(settings.uploads_path, fileId + '.jpg')
+    const filepath = getFilepath(fileId, '.jpg')
     fs.writeFile(filepath, newJpeg.data, (err) => {
         if (err){
             console.log("ERROR:", err)
