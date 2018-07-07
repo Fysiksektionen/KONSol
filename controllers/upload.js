@@ -31,8 +31,10 @@ const writeAndStore = function(fileInfo, stream, callback){
     stream.pipe(fs.createWriteStream(getFilepath(fileInfo)))
         .on('error', callback)
         .on('finish', function(){
-            // once resource is created send the id of it.
-            callback(null, Slide.create({url: getFilepath(fileInfo, 'url')}))
+            // once resource is created, call callback which will send client result.
+            Slide.create({url: getFilepath(fileInfo, 'url')}).then(slide => {
+                return callback(null, slide)
+            }).catch(callback)
         })
 }
 const streamFromBuffer = function(buffer){
@@ -64,13 +66,11 @@ exports.gifUpload = function(req, res) {
             .pipe(new GIFDecoder({indexed: true}))  // decode gif
             .pipe(new GIFEncoder) // reencode gif to get rid of malicious code after EOF
 
-        writeAndStore(fileInfo, stream, function(err, slidePromise){
+        writeAndStore(fileInfo, stream, function(err, slide){
             if (err) {
-                return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
+                return errorHandlers.CreationError(req, res)(err)
             }
-            slidePromise
-                .then(slide => res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), slide}))
-                .catch(errorHandlers.CreationError(req, res)) // should maybe do some cleanup and remove the file?
+            res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), slide})
         })
     }
     else return res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
@@ -103,13 +103,11 @@ exports.pngUpload = function(req, res) {
                 }
             }
             // Write to filesystem
-            writeAndStore(fileInfo, stream, function(err, slidePromise){
+            writeAndStore(fileInfo, stream, function(err, slide){
                 if (err) {
-                    return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
+                    return errorHandlers.CreationError(req, res)(err)
                 }
-                slidePromise
-                    .then(slide => res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), slide}))
-                    .catch(errorHandlers.CreationError(req, res)) // should maybe do some cleanup and remove the file?
+                res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), slide})
             })
         })
 }

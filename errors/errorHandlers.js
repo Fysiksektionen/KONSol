@@ -1,5 +1,6 @@
 const mongoose = require('mongoose')
 const errorChecks = require('./error-checks.js')
+const settings = require('../settings.json')
 
 exports.CreationError = (req, res) => err => {
     if (err instanceof mongoose.Error.ValidationError){
@@ -16,6 +17,10 @@ exports.CreationError = (req, res) => err => {
         // This is the downside to not using an error library.
         // log(err.message, err.errors)
         console.log(err)
-        res.sendStatus(500)
+        res.status(500).json({
+            ok:false, 
+            message:settings.debug ? err.message : "Internal server error",
+            errors: settings.debug ? err.errors  : undefined
+        })
     }
 }

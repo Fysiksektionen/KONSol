@@ -4,6 +4,7 @@
     "cas_url":"https://login.kth.se",
     "session_name":"cas_user",
     "uploads_path":"./uploads",
+    "debug":true,
     "DB_URL":"mongodb://localhost:27017/KONSol",
     "dev_mode":true,
     "dev_mode_is_admin":true,
