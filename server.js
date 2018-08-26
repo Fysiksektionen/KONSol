@@ -7,6 +7,7 @@ const session =           require('express-session');
 const CASAuthentication = require('./lib/cas-authentication.js');
 const mongoose =          require('mongoose')
 const bodyParser =        require('body-parser')
+const cors = require('cors')
 
 // #File uploading dependencies
 const path =     require('path')
@@ -48,7 +49,7 @@ const fileFilter = function (req, file, cb){
 }
 
 let storage = multer.memoryStorage()
-const uploadSlideImage = multer({fileFilter, storage}).single('slide_img') // slide_img is the name field in html <input>.
+const uploadSlideImage = multer({fileFilter, storage}).single('imageFile')
 
 // #Mongoose setup
 mongoose.Promise = Promise
@@ -56,7 +57,14 @@ mongoose.Promise = Promise
 // #Express setup
 let app = express()
 
-// Set up an Express session, which is required for CASAuthentication.
+// cors for development mode
+var corsOptions = {
+    origin: 'http://localhost:3000',
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+app.use(cors(corsOptions))
+
+  // Set up an Express session, which is required for CASAuthentication.
 app.use( session({
   secret            : 'super secret key',
   resave            : false,
@@ -106,15 +114,17 @@ app.get( '/dashboard', cas.bounce, function ( req, res ) { // TODO: USE TEMPLATI
     res.sendFile('public/dashboard.html', {root:__dirname});
 });
 
-app.post('/upload', function(req,res){
+app.post('/api/screen/slides/save', cas.block, checkAdminRights, function(req,res){
     uploadSlideImage(req, res, function (err) {
         if (err) {
           // An error occurred when uploading
           console.log(err)
           return res.status(400).json({ok:false, message:err.message})
         }
-        // temporary, handles null file uploads until sockets are implemented, shouldn't send user to /upload at all
-        else if (!req.file) res.status(400).redirect(req.headers['referer'])
+        else if (!req.file){
+            // create slide from url, not file.
+            slide.save(req, res)
+        } 
         else {
             const filetype = fileType(req.file.buffer)
             switch (filetype.ext){
@@ -137,7 +147,6 @@ app.get('/instagram', cas.block, instagram.getMedia)
 // PUBLIC IN ORDER FOR RASPBERRY PI TO ACCESS IT.
 app.get('/api/screen/slides', slide.getAllSlides);
 app.get('/api/screen/slides/:id',         cas.block,                   slide.getById);
-app.post('/api/screen/slides/create',     cas.block, checkAdminRights, slide.create);
 app.post('/api/screen/slides/remove/:id', cas.block, checkAdminRights, slide.removeById);
 
 // ####################################################################

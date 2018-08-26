@@ -27,12 +27,12 @@ const getFilepath = function (fileInfo, format){
     return path.join(base, fileInfo.id + fileInfo.extension)
 }
 
-const writeAndStore = function(fileInfo, stream, callback){
+const writeAndStore = function(fileInfo, body, stream, callback){
     stream.pipe(fs.createWriteStream(getFilepath(fileInfo)))
         .on('error', callback)
         .on('finish', function(){
             // once resource is created, call callback which will send client result.
-            Slide.create({url: getFilepath(fileInfo, 'url')}).then(slide => {
+            Slide.save(body).then(slide => {
                 return callback(null, slide)
             }).catch(callback)
         })
@@ -66,11 +66,11 @@ exports.gifUpload = function(req, res) {
             .pipe(new GIFDecoder({indexed: true}))  // decode gif
             .pipe(new GIFEncoder) // reencode gif to get rid of malicious code after EOF
 
-        writeAndStore(fileInfo, stream, function(err, slide){
+        writeAndStore(fileInfo, req.body, stream, function(err, newSlide){
             if (err) {
                 return errorHandlers.CreationError(req, res)(err)
             }
-            res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), slide})
+            res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), newSlide})
         })
     }
     else return res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
@@ -103,11 +103,11 @@ exports.pngUpload = function(req, res) {
                 }
             }
             // Write to filesystem
-            writeAndStore(fileInfo, stream, function(err, slide){
+            writeAndStore(fileInfo, req.body, stream, function(err, newSlide){
                 if (err) {
                     return errorHandlers.CreationError(req, res)(err)
                 }
-                res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), slide})
+                res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), newSlide})
             })
         })
 }

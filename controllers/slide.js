@@ -1,6 +1,5 @@
 const mongoose = require('mongoose')
 const Slide = require('../models/slide')
-const errorChecks = require('../errors/error-checks.js')
 const errorHandlers = require('../errors/errorHandlers.js')
 
 exports.getAllSlides = function(req, res) {
@@ -8,12 +7,14 @@ exports.getAllSlides = function(req, res) {
     Slide.find().then(result => res.json(result))
 }
 
-exports.create = function(req, res) {
-    // Save new slide.
-    if (!req.body) return res.sendStatus(400)
-    Slide.create(req.body)
-        .then(slide => {res.status(201);res.json({"ok":true, slide})})
-        .catch(errorHandlers.CreationError(req, res))
+exports.save = function(req, res) {
+    if (!req.body) return res.status(400).json({ok:false, message:"Missing request body"})
+    if (req.body.url){
+        Slide.save(req.body)
+        .then(newSlide => {res.status(201); res.json({"ok":true, slide:newSlide})})
+        .catch(errorHandlers.CreationError(req,res))
+    }
+    else return res.status(400).redirect(req.headers['referer'])
 }
 
 exports.getById = function(req, res) {

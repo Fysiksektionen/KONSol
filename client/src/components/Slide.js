@@ -53,17 +53,36 @@ class Slide extends Component {
   }
 
   handleSubmit (event) {
-    // to be implemented
+    // TODO: probably want to update the state based on the response.
+    event.preventDefault() // Stop form submit
+    // create FormData from form-tag
+    const formData = new FormData(event.target);
+    if (this.state.imageFile) formData.append('file', this.state.imageFile)
+    if (this.state._id)       formData.append('_id', this.state._id)
+    formData.set('visible', this.state.visible)
+    formData.set('fullscreen', this.state.fullscreen)
+    formData.set('caption', this.state.caption)
+
+    const options = {
+      method: "POST",
+      cache: "no-cache",
+      body: formData
+    }
+    fetch('/api/screen/slides/save', options).then((response)=>{
+      // TODO: if response was not ok, display the error message received
+      //       and prevent crashing from call to undefined.
+      return response.json()
+    }).then((json) => console.log(json))
   }
 
   render() {
     return (
-      <form onSubmit={this.handleSubmit}>
+      <form encType="multipart/form-data" onSubmit={this.handleSubmit}>
         <div className="slide">
           <div className="image-container" 
               style={{backgroundImage:"url(https://static.tutsplus.com/assets/elements/landingpage_tuts_icon_plus-8ca21c2c723d17a1958914d2200c8ade.svg)"}}
               onClick={() => this.refs.imageUploader.click() /*click the hidden file input tag*/}>
-            <input type="file" ref="imageUploader" onChange={this.handleImageChange} style={{display:"none"}} name="image" accept="image/*"/>
+            <input type="file" ref="imageUploader" onChange={this.handleImageChange} style={{display:"none"}} name="imageFile" accept="image/*"/>
             {/* if there is an image to display, then display, otherwise don't */
               this.state.imageFile || this.state.url ? <img src={this.state.imageFile || this.state.url}/> : null}
           </div>

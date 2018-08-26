@@ -18,6 +18,10 @@ const slideSchema = new Schema({
     created: {
         type: Number,
         default: Date.now
+    },
+    fullscreen: {
+        type: Boolean,
+        default: false
     }
     // user implementation
     // created_by: {
@@ -37,9 +41,15 @@ slideSchema.statics.createFromIG = function (IGposts){
     }))
 }
 
-slideSchema.methods.toggleVisibility = function() {
-    this.set({visible : !this.visible})
-    return this.save()
+slideSchema.statics.save = function (requestBody) {
+    // unpack variables to avoid users setting `created` field.
+    const {_id, url, fullscreen, visible, start, end, caption} = requestBody
+    if (_id) {
+        // if id specified, try to find and update
+        return this.findByIdAndUpdate(_id, {url, fullscreen, visible, start, end, caption}, {new:true})
+    }
+    // No existing id, create new slide.
+    return this.create({url, fullscreen, visible, start, end, caption})
 }
 
 module.exports = mongoose.model('Slide', slideSchema)
