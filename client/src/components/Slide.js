@@ -64,7 +64,8 @@ class Slide extends Component {
               style={{backgroundImage:"url(https://static.tutsplus.com/assets/elements/landingpage_tuts_icon_plus-8ca21c2c723d17a1958914d2200c8ade.svg)"}}
               onClick={() => this.refs.imageUploader.click() /*click the hidden file input tag*/}>
             <input type="file" ref="imageUploader" onChange={this.handleImageChange} style={{display:"none"}} name="image" accept="image/*"/>
-            {<img src={this.state.imageFile || this.state.url}/>}
+            {/* if there is an image to display, then display, otherwise don't */
+              this.state.imageFile || this.state.url ? <img src={this.state.imageFile || this.state.url}/> : null}
           </div>
           <div className="slide-settings">
               <textarea value={this.state.caption || ''} onChange={this.handleChange}

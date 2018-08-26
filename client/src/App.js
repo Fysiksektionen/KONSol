@@ -7,7 +7,7 @@ class App extends Component {
   constructor() {
     super()
     this.state={
-      slides:[]
+      slides:[{tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:''}]
     }
   }
 
@@ -19,7 +19,9 @@ class App extends Component {
         }
         else return []
       })
-      .then(slides => this.setState({ slides }));
+      .then(slides => this.setState((prevstate) => {
+        return { slides : prevstate.slides.concat(slides) }
+      })); 
   }
 
   render() {
@@ -32,7 +34,7 @@ class App extends Component {
         </div>
         <div className="slides">
           {/*key is a unique key for React to optimise rerendering*/}
-          {this.state.slides.length
+          {this.state.slides.length - 1
               ? this.state.slides.map(slide => <Slide initialState={slide} key={slide._id}/>)
               : <ErrorMessage message="Could not load slides"/>
           }
