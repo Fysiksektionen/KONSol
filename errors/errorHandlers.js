@@ -5,7 +5,7 @@ const settings = require('../settings.json')
 exports.CreationError = (req, res) => err => {
     if (err instanceof mongoose.Error.ValidationError){
         res.status(400)
-        res.json({'message':'Validation failed',status:400,ok:false,errorName:'ValidationError',errors:err.errors})
+        res.json({'message':'Validation failed,'+err.message,status:400,ok:false,errorName:'ValidationError',errors:err.errors})
     }
     else if (errorChecks.DuplicateError(err)) {
         res.status(400)

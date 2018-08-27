@@ -11,7 +11,7 @@ exports.save = function(req, res) {
     if (!req.body) return res.status(400).json({ok:false, message:"Missing request body"})
     if (req.body.url){
         Slide.save(req.body)
-        .then(newSlide => {res.status(201); res.json({"ok":true, slide:newSlide})})
+        .then(newSlide => {res.status(201); res.json({"ok":true, newSlide})})
         .catch(errorHandlers.CreationError(req,res))
     }
     else return res.status(400).redirect(req.headers['referer'])
