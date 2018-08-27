@@ -4,20 +4,11 @@ const request = require('request')
 const settings = require('../settings.json')
 const User = require('../models/user.js')
 const Slide = require('../models/slide.js')
+const errorHandlers = require('../errors/errorHandlers.js')
 
 const redirect_uri = 
     settings.OAuth.REDIRECT_URI || 
     'http://localhost:8888/callback'
-
-// Temporary rendering with HTML.
-const simpleRender = media => {
-    html = `<link rel="stylesheet" type="text/css" media="screen" href="style.css" />
-            <a href="/instagram?update=true" class="btn">Uppdatera</a>`
-    for (let i=0; i<media.length;i++){
-        html += '<img src="' + media[i].url + '" alt="Oops, unable to find this image"/>'
-    }
-    return html
-}
 
 // Helper function
 const fetchMedia = access_token => 
@@ -40,7 +31,7 @@ exports.getMedia = function(req, res) {
         const access_token = req.query.access_token || user.cached_ig_access_token || null
         if (!req.query.access_token && !req.query.update){
             // just send all slides
-            Slide.find().then(slides => res.send(simpleRender(slides)))
+            Slide.find().then(slides => res.status(200).json(slides))
         }
         else {
             console.log('updating')
@@ -48,9 +39,10 @@ exports.getMedia = function(req, res) {
                 fetchMedia(access_token)
                 .then(media => {
                     // All went well, cache access token and media.
-                    res.send(simpleRender(media))
                     user.cacheToken(access_token)
-                    Slide.createFromIG(media)
+                    Promise.all(Slide.createFromIG(media)) // returns a map of promises of slides, so we Promise.all
+                    .then(slides => res.status(201).json({ok:true, slides}))
+                    .catch(errorHandlers.CreationError(req, res))
                 })
                 .catch(err => {console.log("GOTCHA", err);res.sendStatus(500)})
             }

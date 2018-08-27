@@ -71,7 +71,6 @@ app.use( session({
   saveUninitialized : true
 }));
 
-app.use(express.static('public')) // amongst other things, this automaps index.html to root route '/'
 app.use(bodyParser.json())
 
 // Create a new instance of CASAuthentication.
@@ -108,11 +107,6 @@ Endpoint functions:
               redirect the client to the CAS logout page.
 */
 // ####################################################################
-
-// Dashboard is supposed to be the main place where you manage the screen
-app.get( '/dashboard', cas.bounce, function ( req, res ) { // TODO: USE TEMPLATING
-    res.sendFile('public/dashboard.html', {root:__dirname});
-});
 
 app.post('/api/screen/slides/save', cas.block, checkAdminRights, function(req,res){
     uploadSlideImage(req, res, function (err) {
