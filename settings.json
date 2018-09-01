@@ -3,6 +3,7 @@
     "service_url":"http://localhost:8888",
     "cas_url":"https://login.kth.se",
     "session_name":"cas_user",
+    "session_info":"cas_userinfo",
     "uploads_path":"./client/public/img",
     "debug":true,
     "DB_URL":"mongodb://localhost:27017/KONSol",

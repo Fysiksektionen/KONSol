@@ -7,9 +7,17 @@ class App extends Component {
   constructor() {
     super()
     this.state={
+      user:{logged_in:false},
       slides:[{tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:''}]
     }
     this.removeSlide.bind(this)
+    fetch('api/me')
+      .then(res=>res.json())
+      .then(user => {
+          user.logged_in = true
+          this.setState({user})
+      })
+      .catch(err => this.setState({user:{logged_in:false}}))
   }
 
   componentDidMount() {
@@ -37,7 +45,9 @@ class App extends Component {
         <div className="greeting">
           <h1>KONSol</h1>
           <p>Fjärrkontrollera skärmen i Konsulatet!</p>
-          <a href="/dashboard" className="btn">Logga in med KTH</a>
+          { this.state.user.logged_in 
+            ? <p>Welcome {this.state.user.name}!</p> 
+            : <a href='http://localhost:8888/login?returnTo=http://localhost:8888' className="btn">Logga in med KTH</a>}
         </div>
         <div className="slides">
           {/*key is a unique key for React to optimise rerendering*/}

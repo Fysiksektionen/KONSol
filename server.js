@@ -57,12 +57,19 @@ mongoose.Promise = Promise
 // #Express setup
 let app = express()
 
-// cors for development mode
-var corsOptions = {
-    origin: 'http://localhost:3000',
-    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+// Production use of the react build
+if (process.env.KONSOL_NODE_ENV === 'production') {
+    app.set('static_folder', 'client/build')
+    app.use(express.static(app.get('static_folder')))
 }
-app.use(cors(corsOptions))
+else {
+    // cors for development mode
+    var corsOptions = {
+        origin: 'http://localhost:3000',
+        optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+    }
+    app.use(cors(corsOptions))
+}
 
   // Set up an Express session, which is required for CASAuthentication.
 app.use( session({
@@ -83,7 +90,7 @@ let cas = new CASAuthentication({
   dev_mode_user   : settings.dev_mode_user, // The CAS user to use if dev mode is active.
   dev_mode_info   : settings.dev_mode_info, // The CAS user information to use if dev mode is active.
   session_name    : settings.session_name, // The name of the session variable storing the CAS user.	
-  session_info    : 'cas_userinfo', // The name of the session variable storing the CAS user information. 
+  session_info    : settings.session_info, // The name of the session variable storing the CAS user information. 
   destroy_session : false // Destroy the entire session upon logout or just delete the session variable storing the CAS user.
 });
 
@@ -135,10 +142,19 @@ app.post('/api/screen/slides/save', cas.block, checkAdminRights, function(req,re
 })
 
 app.get('/instagram', cas.block, instagram.getMedia)
-
+app.get('/login', cas.bounce_redirect)
 // ####################################################################
 //            API for the screen
 // ####################################################################
+
+// Get basic user info
+app.get('/api/me', cas.block, function(req, res){
+    res.status(200).json({
+        ok:true,
+        name:req.session[settings.session_name],
+        info:req.session[settings.session_info]
+    })
+})
 
 // PUBLIC IN ORDER FOR RASPBERRY PI TO ACCESS IT.
 app.get('/api/screen/slides', slide.getAllSlides);
