@@ -9,6 +9,7 @@ class App extends Component {
     this.state={
       slides:[{tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:''}]
     }
+    this.removeSlide.bind(this)
   }
 
   componentDidMount() {
@@ -24,6 +25,12 @@ class App extends Component {
       })); 
   }
 
+  removeSlide = (id) => {
+    this.setState(prevState => {
+      return { slides: prevState.slides.filter(slide => slide._id !== id) }
+    })
+  }
+
   render() {
     return (
       <div className="App">
@@ -35,7 +42,9 @@ class App extends Component {
         <div className="slides">
           {/*key is a unique key for React to optimise rerendering*/}
           {this.state.slides.length - 1
-              ? this.state.slides.map(slide => <Slide initialState={slide} key={slide._id}/>)
+              ? this.state.slides.map(slide => 
+                  <Slide initialState={slide} key={slide._id} removeSlide={this.removeSlide}/>
+                )
               : <ErrorMessage message="Could not load slides"/>
           }
         </div>

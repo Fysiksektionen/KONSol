@@ -29,6 +29,7 @@ class Slide extends Component {
     this.handleCheckboxChange = this.handleCheckboxChange.bind(this)
     this.handleImageChange = this.handleImageChange.bind(this)
     this.handleSubmit = this.handleSubmit.bind(this)
+    this.handleRemove = this.handleRemove.bind(this)
   }
 
   handleChange (event) {
@@ -72,7 +73,23 @@ class Slide extends Component {
       // TODO: if response was not ok, display the error message received
       //       and prevent crashing from call to undefined.
       return response.json()
-    }).then((json) => console.log(json))
+    }).then((json) => {
+      console.log(json)
+    })
+  }
+
+  handleRemove () {
+    fetch('/api/screen/slides/'+this.state._id+'/remove', {method:"POST", body:{}})
+      .then(res => res.json())
+      .then(json => {
+        console.log(json)
+        if (json.n === 1) { // A (this) slide was removed on the backend
+          this.props.removeSlide(this.state._id) // call parent remove.
+        }
+        else {
+          // show error message
+        }
+      })
   }
 
   render() {
@@ -106,7 +123,9 @@ class Slide extends Component {
           </div>
           <div className="slide-footer">
             <input type="submit" value="Save" className="btn"/>
-            <a href="#" className="btn red">Remove</a>
+            {this.state._id
+              ? <button className="btn red" type="button" onClick={this.handleRemove}>Remove</button>
+              : null}
           </div>
         </div>
       </form>
