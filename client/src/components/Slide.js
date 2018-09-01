@@ -60,8 +60,12 @@ class Slide extends Component {
     const formData = new FormData(event.target);
     if (this.state.imageFile) formData.append('file', this.state.imageFile)
     if (this.state._id)       formData.append('_id', this.state._id)
+    // set visible and fullscreen manually because
+    // checkbox values are "on" and undefined, not "true" or "false"
     formData.set('visible', this.state.visible)
     formData.set('fullscreen', this.state.fullscreen)
+    // set caption manually because it isn't registered as a field on the form-tag,
+    // not even with form-id references
     formData.set('caption', this.state.caption)
 
     const options = {
@@ -105,7 +109,7 @@ class Slide extends Component {
           </div>
           <div className="slide-settings">
               <textarea value={this.state.caption || ''} onChange={this.handleChange}
-                  placeholder="Caption here..." name="caption" form="slide-form">
+                  placeholder="Caption here..." name="caption">
               </textarea>
               <DateInput label="Start" value={this.state.start || ''} onChange={this.handleChange} id={"start"+this.state._id} name="start" />
               <DateInput label="End"   value={this.state.end || ''}   onChange={this.handleChange} id={"end"  +this.state._id} name="end"   />

@@ -40,12 +40,12 @@ const fileFilter = function (req, file, cb){
     if (valid){
         cb(null, valid)
     }
-    else if (!only_one_dot || !alphanumeric_name) 
-        cb(new Error("Invalid name, only alphanumeric name with a file extension allowed."))
-    else if (!valid_file_extension) 
-        cb(new Error("Invalid file extension"))
-    else if (!valid_mimetype) 
-        cb(new Error("Invalid mimetype"))
+    else if (!only_one_dot || !alphanumeric_name)
+        cb(new Error("Invalid filename, only alphanumeric filenames with a file extension are allowed."))
+    else if (!valid_file_extension)
+        cb(new Error("Invalid file extension, must be png, jpg, jpeg or gif."))
+    else if (!valid_mimetype)
+        cb(new Error("Invalid mimetype, must be image/png, image/jpeg or image/gif"))
 }
 
 let storage = multer.memoryStorage()
@@ -111,9 +111,10 @@ Endpoint functions:
 app.post('/api/screen/slides/save', cas.block, checkAdminRights, function(req,res){
     uploadSlideImage(req, res, function (err) {
         if (err) {
-          // An error occurred when uploading
-          console.log(err)
-          return res.status(400).json({ok:false, message:err.message})
+            // An error occurred when uploading
+            console.log(err)
+            return res.status(400).json({ok:false, 
+                message: settings.debug ? err.message : "An error occurred when uploading"})
         }
         else if (!req.file){
             // create slide from url, not file.
@@ -126,7 +127,8 @@ app.post('/api/screen/slides/save', cas.block, checkAdminRights, function(req,re
                 case 'gif': return upload.gifUpload(req, res)
                 case 'jpg': return upload.jpgUpload(req, res)
                 default:
-                    return res.status(400).json({ok:false,message:"Invalid file format, must be a png, gif or jpg file."})
+                    return res.status(400).json({ok:false,
+                        message:"Invalid file format, must be a png, gif or jpg file."})
             }
         }
     })
@@ -141,7 +143,7 @@ app.get('/instagram', cas.block, instagram.getMedia)
 // PUBLIC IN ORDER FOR RASPBERRY PI TO ACCESS IT.
 app.get('/api/screen/slides', slide.getAllSlides);
 app.get('/api/screen/slides/:id',         cas.block,                   slide.getById);
-app.post('/api/screen/slides/remove/:id', cas.block, checkAdminRights, slide.removeById);
+app.post('/api/screen/slides/:id/remove', cas.block, checkAdminRights, slide.removeById);
 
 // ####################################################################
 //            CAS API
