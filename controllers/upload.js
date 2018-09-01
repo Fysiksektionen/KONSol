@@ -23,7 +23,7 @@ const randomId = function () {
 const getFilepath = function (fileInfo, format){
     // if format === 'url' then return an url to the resource.
     // else return the filesystem path to the file.
-    const base = format === 'url' ? path.join(settings.service_url,'uploads') : settings.uploads_path
+    const base = format === 'url' ? '/img/' : settings.uploads_path
     return path.join(base, fileInfo.id + fileInfo.extension)
 }
 
@@ -31,8 +31,9 @@ const writeAndStore = function(fileInfo, body, stream, callback){
     stream.pipe(fs.createWriteStream(getFilepath(fileInfo)))
         .on('error', callback)
         .on('finish', function(){
-            // once resource is created, call callback which will send client result.
+            body.url = getFilepath(fileInfo, 'url')
             Slide.save(body).then(slide => {
+                // once resource is created, call callback which will send client result.
                 return callback(null, slide)
             }).catch(callback)
         })
@@ -70,7 +71,7 @@ exports.gifUpload = function(req, res) {
             if (err) {
                 return errorHandlers.CreationError(req, res)(err)
             }
-            res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), newSlide})
+            res.status(201).json({ok:true, id: fileInfo.id, newSlide})
         })
     }
     else return res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
@@ -107,7 +108,7 @@ exports.pngUpload = function(req, res) {
                 if (err) {
                     return errorHandlers.CreationError(req, res)(err)
                 }
-                res.status(201).json({ok:true, id: fileInfo.id, url: getFilepath(fileInfo, 'url'), newSlide})
+                res.status(201).json({ok:true, id: fileInfo.id, newSlide})
             })
         })
 }
