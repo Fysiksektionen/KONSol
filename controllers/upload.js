@@ -103,8 +103,9 @@ exports.pngUpload = function(req, res) {
                     cleanPng.data[idx+3] = data[idx+3];
                 }
             }
+            cleanPng.pack()
             // Write to filesystem
-            writeAndStore(fileInfo, req.body, stream, function(err, newSlide){
+            writeAndStore(fileInfo, req.body, cleanPng, function(err, newSlide){
                 if (err) {
                     return errorHandlers.CreationError(req, res)(err)
                 }
