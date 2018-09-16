@@ -8,6 +8,7 @@ const CASAuthentication = require('./lib/cas-authentication.js');
 const mongoose =          require('mongoose')
 const bodyParser =        require('body-parser')
 const cors = require('cors')
+const MongoStore =        require('connect-mongo')(session)
 
 // #File uploading dependencies
 const path =     require('path')
@@ -53,6 +54,16 @@ const uploadSlideImage = multer({fileFilter, storage}).single('imageFile')
 
 // #Mongoose setup
 mongoose.Promise = Promise
+mongoose.connect(settings.DB_URL)
+const db = mongoose.connection
+
+// Avoid storing sessions in memory. TODO: Don't store images in memory
+const store = new MongoStore({
+    url: settings.DB_URL
+    // TODO: re-enable this when
+    // https://github.com/jdesboeufs/connect-mongo/issues/277 is fixed:
+    // mongooseConnection: db
+});
 
 // #Express setup
 let app = express()
@@ -75,7 +86,8 @@ else {
 app.use( session({
   secret            : 'super secret key',
   resave            : false,
-  saveUninitialized : true
+  saveUninitialized : false,
+  store             : store
 }));
 
 app.use(bodyParser.json())
@@ -184,8 +196,6 @@ app.get('/instagram/callback', instagram.callback)
 //            Launch app to port 8888
 // ####################################################################
 const PORT = settings.PORT || 8888
-mongoose.connect(settings.DB_URL)
-const db = mongoose.connection
 
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', () => {
