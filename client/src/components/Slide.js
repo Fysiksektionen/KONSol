@@ -71,7 +71,10 @@ class Slide extends Component {
     const options = {
       method: "POST",
       cache: "no-cache",
-      body: formData
+      body: formData,
+      headers:{
+        "XSRF-TOKEN": this.props.csrftoken
+      }
     }
     fetch('/api/screen/slides/save', options).then((response)=>{
       // TODO: if response was not ok, display the error message received
@@ -83,7 +86,14 @@ class Slide extends Component {
   }
 
   handleRemove () {
-    fetch('/api/screen/slides/'+this.state._id+'/remove', {method:"POST", body:{}})
+    const options = {
+      method: "POST",
+      body: {},
+      headers: {
+        "XSRF-TOKEN": this.props.csrftoken
+      }
+    }
+    fetch('/api/screen/slides/'+this.state._id+'/remove', options)
       .then(res => res.json())
       .then(json => {
         console.log(json)

@@ -7,8 +7,9 @@ const session =           require('express-session');
 const CASAuthentication = require('./lib/cas-authentication.js');
 const mongoose =          require('mongoose')
 const bodyParser =        require('body-parser')
-const cors = require('cors')
 const MongoStore =        require('connect-mongo')(session)
+const cors =              require('cors')
+const csrf =              require('csurf')
 
 // #File uploading dependencies
 const path =     require('path')
@@ -90,20 +91,30 @@ app.use( session({
   store             : store
 }));
 
+
 app.use(bodyParser.json())
 
 // Create a new instance of CASAuthentication.
 let cas = new CASAuthentication({
-  cas_url         : settings.cas_url, // The URL of the CAS server.	
-  service_url     : settings.service_url, //The URL which is registered on the CAS server as a valid service.
-  cas_version     : '3.0', // The CAS protocol version.	
-  renew           : false, // Require the user to login to the CAS server regardless of whether a session exists.
-  is_dev_mode     : settings.dev_mode, // Don't use CAS authentication and the session CAS variable is set to dev_mode_user.
-  dev_mode_user   : settings.dev_mode_user, // The CAS user to use if dev mode is active.
-  dev_mode_info   : settings.dev_mode_info, // The CAS user information to use if dev mode is active.
-  session_name    : settings.session_name, // The name of the session variable storing the CAS user.	
-  session_info    : settings.session_info, // The name of the session variable storing the CAS user information. 
-  destroy_session : false // Destroy the entire session upon logout or just delete the session variable storing the CAS user.
+    cas_url         : settings.cas_url, // The URL of the CAS server.	
+    service_url     : settings.service_url, //The URL which is registered on the CAS server as a valid service.
+    cas_version     : '3.0', // The CAS protocol version.	
+    renew           : false, // Require the user to login to the CAS server regardless of whether a session exists.
+    is_dev_mode     : settings.dev_mode, // Don't use CAS authentication and the session CAS variable is set to dev_mode_user.
+    dev_mode_user   : settings.dev_mode_user, // The CAS user to use if dev mode is active.
+    dev_mode_info   : settings.dev_mode_info, // The CAS user information to use if dev mode is active.
+    session_name    : settings.session_name, // The name of the session variable storing the CAS user.	
+    session_info    : settings.session_info, // The name of the session variable storing the CAS user information. 
+    destroy_session : false // Destroy the entire session upon logout or just delete the session variable storing the CAS user.
+});
+
+app.use(csrf());
+app.use((req, res, next) => {
+    //TODO: should also set express trust proxy to 1 in production (since under apache proxy).
+    const cookie_options = process.env.KONSOL_NODE_ENV === 'production' 
+        ? { sameSite: true } : {}
+    res.cookie('XSRF-TOKEN', req.csrfToken(), cookie_options); 
+    next();
 });
 
 // ####################################################################
@@ -191,6 +202,15 @@ app.get( '/logout', cas.logout );
 
 app.get('/instagram/login', cas.block, instagram.authorize)
 app.get('/instagram/callback', instagram.callback)
+
+app.use((err, req, res, next) => {
+    if (err.code !== 'EBADCSRFTOKEN') return next(err);
+    res.status(403).json({
+      type: 'InvalidCSRFTokenError',
+      message: 'Invalid or missing CSRF token',
+      status: 403
+    });
+  });
 
 // ####################################################################
 //            Launch app to port 8888
