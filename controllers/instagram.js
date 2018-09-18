@@ -15,40 +15,50 @@ const fetchMedia = access_token =>
     fetch("https://api.instagram.com/v1/users/self/media/recent/?access_token=" + access_token)
     .then(response => response.json())
     .then(json => json.data)
-    .then(posts => posts.map(post => {
-        return {
-            url: post.images.standard_resolution.url,
-            caption: post.caption && post.caption.text,
-            created: post.created_time*1000 // *1000 for milliseconds and integer.
-        }
-    }))
+    .then(posts => posts
+        // if (json.data) then map over posts, else propagate error
+        ? posts.map(post => {
+            return {
+                url: post.images.standard_resolution.url,
+                caption: post.caption && post.caption.text,
+                created: post.created_time*1000 // *1000 for milliseconds and integer.
+            }
+        })
+        : {error:"UnexpectedResponseError"}
+    )
 
 
-// Returns the stored slides if not explicitly told to update.
-// If update query is specified, fetch and store new media. Caches access token.
-exports.getMedia = function(req, res) {
+// Fetch and store new media. Caches access token.
+exports.update = function(req, res) {
     User.findOne({username: req.session[settings.session_name]}).then(user => {
-        const access_token = req.query.access_token || user.cached_ig_access_token || null
-        if (!req.query.access_token && !req.query.update){
-            // just send all slides
-            Slide.find().then(slides => res.status(200).json(slides))
-        }
-        else {
-            console.log('updating')
+        if (user){
+            const access_token = req.query.access_token || user.cached_ig_access_token || null
             if (access_token){
                 fetchMedia(access_token)
                 .then(media => {
-                    // All went well, cache access token and media.
-                    user.cacheToken(access_token)
-                    Promise.all(Slide.createFromIG(media)) // returns a map of promises of slides, so we Promise.all
-                    .then(slides => res.status(201).json({ok:true, slides}))
-                    .catch(errorHandlers.CreationError(req, res))
+                    if (media.error === "UnexpectedResponseError"){
+                        // cached access token was probably invalid, login again to fetch a new one.
+                        res.redirect('/instagram/login')
+                    }
+                    else {
+                        // All went well, cache access token and create slides from data.
+                        user.cacheToken(access_token)
+                        Promise.all(Slide.createFromIG(media)) // returns a map of promises of slides, so we Promise.all
+                        .then(slides => res.status(201).redirect(
+                            process.env.KONSOL_NODE_ENV === 'production' ?  settings.service_url : 'http://localhost:3000'
+                        ))
+                        .catch(errorHandlers.CreationError(req, res))
+                    }
                 })
                 .catch(err => {console.log("GOTCHA", err);res.sendStatus(500)})
             }
             else {
                 res.redirect('/instagram/login')
             }
+        }
+        else {
+            // login and redirect to this endpoint again to retry.
+            res.redirect('http://localhost:8888/login?returnTo=http://localhost:8888/instagram')
         }
     })
 }

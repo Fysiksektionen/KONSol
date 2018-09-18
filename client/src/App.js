@@ -9,7 +9,7 @@ class App extends Component {
     super()
     this.state={
       user:{logged_in:false},
-      slides:[{tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:''}]
+      slides:[]
     }
     this.removeSlide.bind(this)
     fetch('api/me')
@@ -49,11 +49,14 @@ class App extends Component {
           { this.state.user.logged_in 
             ? <p>Welcome {this.state.user.name}!</p> 
             : <a href='http://localhost:8888/login?returnTo=http://localhost:8888' className="btn">Logga in med KTH</a>}
+          <a href='http://localhost:8888/instagram' className="btn">Hämta nya Instagram-bilder</a>
         </div>
         <div className="slides">
+          <Slide initialState={{tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:''}} csrftoken={Cookies.get('XSRF-TOKEN')}/>
           {/*key is a unique key for React to optimise rerendering*/}
-          {this.state.slides.length - 1
-              ? this.state.slides.map(slide => 
+          {this.state.slides.length
+              ? this.state.slides.slice(0).sort((a,b) => (b.created-a.created))
+                .map(slide =>
                   <Slide initialState={slide} csrftoken={Cookies.get('XSRF-TOKEN')} key={slide._id} removeSlide={this.removeSlide}/>
                 )
               : <ErrorMessage message="Could not load slides"/>

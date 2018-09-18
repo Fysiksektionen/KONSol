@@ -33,7 +33,7 @@ const slideSchema = new Schema({
 slideSchema.statics.createFromIG = function (IGposts){
     return IGposts.map(post => this.findOne({url:post.url}).then(slide => {
         if(!slide) { // If not already created; avoids duplicate key error
-            return this.create(post)
+            return this.create({tags:["instagram"], visible: true, ...post})
         }
         else {
             return Promise.resolve(slide)

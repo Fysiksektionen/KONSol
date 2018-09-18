@@ -164,7 +164,7 @@ app.post('/api/screen/slides/save', cas.block, checkAdminRights, function(req,re
     })
 })
 
-app.get('/instagram', cas.block, instagram.getMedia)
+app.get('/instagram', cas.bounce, checkAdminRights, instagram.update)
 app.get('/login', cas.bounce_redirect)
 // ####################################################################
 //            API for the screen
@@ -200,7 +200,7 @@ app.get( '/logout', cas.logout );
 //            Instagram OAuth
 // ####################################################################
 
-app.get('/instagram/login', cas.block, instagram.authorize)
+app.get('/instagram/login', cas.bounce, instagram.authorize)
 app.get('/instagram/callback', instagram.callback)
 
 app.use((err, req, res, next) => {
