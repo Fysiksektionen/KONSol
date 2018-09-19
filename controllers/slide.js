@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const Slide = require('../models/slide')
 const errorHandlers = require('../errors/errorHandlers.js')
+const settings = require('../settings.json')
 
 exports.getAllSlides = function(req, res) {
     // Return all slides
@@ -26,11 +27,23 @@ exports.getById = function(req, res) {
 exports.removeById = function(req, res) {
     // Status is {"ok":1, "n":1} if all went as expected. 
     // Can return {"ok":1, "n":0}, meaning id was technically valid but no object had it.
+    const invalidIdResponse = {
+        ok:0, n:0, message: `Couldn't find slide with id "${req.params.id}"`, errorName: "InvalidIdError"
+    }
+
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
-        Slide.deleteOne({_id:req.params.id}).then(status => res.json(status))
+        Slide.findById(req.params.id).then(slide => {
+            if (!slide) res.status(400).json(invalidIdResponse)
+            slide.remove()
+            .then(removedSlide => res.status(200).json({ok: 1, n: 1, removedSlide}))
+            .catch(err => res.status(500).json({
+                ok:false,
+                message:settings.debug ? err.message : "Error removing file",
+                errorName: "InternalServerError"
+            }))
+        })
     }
     else {
-        res.status(400)
-        res.json({'message':'Invalid id', status: 400, ok: false, errorName: 'InvalidIdError'})
+        res.status(400).json(invalidIdResponse)
     }
 }

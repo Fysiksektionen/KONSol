@@ -20,18 +20,20 @@ const randomId = function () {
     return crypto.randomBytes(16).toString('hex')
 }
 
-const getFilepath = function (fileInfo, format){
+const getFilepath = function (fileName, format){
     // if format === 'url' then return an url to the resource.
     // else return the filesystem path to the file.
     const base = format === 'url' ? '/img/' : settings.uploads_path
-    return path.join(base, fileInfo.id + fileInfo.extension)
+    return path.join(base, fileName)
 }
 
-const writeAndStore = function(fileInfo, body, stream, callback){
-    stream.pipe(fs.createWriteStream(getFilepath(fileInfo)))
+const writeAndStore = function(fileName, body, stream, callback){
+    stream.pipe(fs.createWriteStream(getFilepath(fileName)))
         .on('error', callback)
         .on('finish', function(){
-            body.url = getFilepath(fileInfo, 'url')
+            body.url = getFilepath(fileName, 'url')
+            body.remotely_hosted = false
+            body.filename = fileName
             Slide.save(body).then(slide => {
                 // once resource is created, call callback which will send client result.
                 return callback(null, slide)
@@ -59,26 +61,26 @@ exports.gifUpload = function(req, res) {
     // if passed_previous_checks is false then it should cascade as false throughout.
     const reducer = (passed_previous_checks, image) => passed_previous_checks ? !image.text && !image.comments.length : false
     const no_comments_or_text = gif.images.reduce(reducer, true)
-
+    
     if (gif.valid && gif.images && gif.height && gif.width && no_comments_or_text){
-        const fileInfo = {id: randomId(), extension: '.gif'}
+        const fileName = randomId() + '.gif'
         // create new read and write stream in order to push buffer to it.
         const stream = streamFromBuffer(req.file.buffer)
             .pipe(new GIFDecoder({indexed: true}))  // decode gif
             .pipe(new GIFEncoder) // reencode gif to get rid of malicious code after EOF
 
-        writeAndStore(fileInfo, req.body, stream, function(err, newSlide){
+        writeAndStore(fileName, req.body, stream, function(err, newSlide){
             if (err) {
                 return errorHandlers.CreationError(req, res)(err)
             }
-            res.status(201).json({ok:true, id: fileInfo.id, newSlide})
+            res.status(201).json({ok:true, newSlide})
         })
     }
     else return res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
 }
 
 exports.pngUpload = function(req, res) {
-    const fileInfo = {id: randomId(), extension: '.png'}    
+    const fileName = randomId() + '.png'    
     // create new read and write stream in order to push buffer to it.
     const stream = streamFromBuffer(req.file.buffer)
     // we can now use the pipe API.
@@ -105,11 +107,11 @@ exports.pngUpload = function(req, res) {
             }
             cleanPng.pack()
             // Write to filesystem
-            writeAndStore(fileInfo, req.body, cleanPng, function(err, newSlide){
+            writeAndStore(fileName, req.body, cleanPng, function(err, newSlide){
                 if (err) {
                     return errorHandlers.CreationError(req, res)(err)
                 }
-                res.status(201).json({ok:true, id: fileInfo.id, newSlide})
+                res.status(201).json({ok:true, newSlide})
             })
         })
 }
@@ -128,13 +130,13 @@ exports.jpgUpload = function(req, res) {
     const quality = 100
     const newJpeg = jpeg.encode(jpegData, quality)
 
-    const fileInfo = {id: randomId(), extension: '.jpg'}
-    fs.writeFile(getFilepath(fileInfo), newJpeg.data, (err) => {
+    const fileName = randomId() + '.jpg'
+    fs.writeFile(getFilepath(fileName), newJpeg.data, (err) => {
         if (err){
             console.log("ERROR:", err)
             return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
         }
-        res.status(201).json({ok:true, id: fileInfo.id})
+        res.status(201).json({ok:true})
     })
 }
 

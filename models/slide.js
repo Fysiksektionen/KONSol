@@ -1,4 +1,6 @@
 const mongoose = require('mongoose')
+const fs = require('fs')
+const path = require('path')
 const Schema = mongoose.Schema
 const ValidationError =  mongoose.Error.ValidationError
 const ValidatorError = mongoose.Error.ValidatorError
@@ -24,7 +26,16 @@ const slideSchema = new Schema({
     fullscreen: {
         type: Boolean,
         default: false
+    },
+    remotely_hosted: {
+        type: Boolean,
+        default:true // specify as false if it's an uploaded image.
+    },
+    filename: {
+        type: String,
+        required: () => !this.remotely_hosted
     }
+
     // user implementation
     // created_by: {
     //     type: Schema.Types.ObjectId,
@@ -48,6 +59,21 @@ slideSchema.pre('validate', function(next) {
     next();
 })
 
+// remove stored image if it is locally hosted.
+slideSchema.pre('remove', function(next){
+    if(this.remotely_hosted) return next() // image not stored by this server.
+    
+    const filepath = path.join(settings.uploads_path, this.filename)
+    fs.unlink(filepath, (err) => {
+        if(err && err.code == 'ENOENT') {
+            // File not found, so just continue deleting slide.
+            next()
+        }
+        else if (err) next(err) // Other errors, i.e. insufficient permissions.
+        else next() // removed file, now continue removing slide.
+    })
+})
+
 slideSchema.statics.createFromIG = function (IGposts){
     return IGposts.map(post => this.findOne({url:post.url}).then(slide => {
         if(!slide) { // If not already created; avoids duplicate key error
@@ -61,13 +87,13 @@ slideSchema.statics.createFromIG = function (IGposts){
 
 slideSchema.statics.save = function (requestBody) {
     // unpack variables to avoid users setting `created` field.
-    const {_id, url, fullscreen, visible, start, end, caption} = requestBody
+    const {_id, url, fullscreen, visible, start, end, caption, remotely_hosted, filename} = requestBody
     if (_id) {
         // if id specified, try to find and update
         return this.findByIdAndUpdate(_id, {url, fullscreen, visible, start, end, caption}, {new:true})
     }
     // No existing id, create new slide.
-    return this.create({url, fullscreen, visible, start, end, caption})
+    return this.create({url, fullscreen, visible, start, end, caption, remotely_hosted, filename})
 }
 
 module.exports = mongoose.model('Slide', slideSchema)
