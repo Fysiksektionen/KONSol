@@ -1,5 +1,7 @@
 const mongoose = require('mongoose')
 const Schema = mongoose.Schema
+const ValidationError =  mongoose.Error.ValidationError
+const ValidatorError = mongoose.Error.ValidatorError
 
 const slideSchema = new Schema({
     url: {
@@ -28,6 +30,22 @@ const slideSchema = new Schema({
     //     type: Schema.Types.ObjectId,
     //     ref: 'User'
     // }
+})
+
+slideSchema.pre('validate', function(next) {
+    if (this.start && this.end){
+        if (this.start > this.end) {
+            let err = new ValidationError(this)
+            err.errors.dates = new ValidatorError({
+                message:"Start Date can't be after End Date",
+                path:"start",
+                name:"ValidatorError",
+                type:'notvalid'
+            })
+            return next(err)
+        }
+    }
+    next();
 })
 
 slideSchema.statics.createFromIG = function (IGposts){

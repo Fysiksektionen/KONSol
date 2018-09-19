@@ -15,6 +15,8 @@ function DateInput (props) {
       <input type="date" id={props.id} name={props.name}
         value={props.value.slice(0,10)}
         onChange={props.onChange}
+        min={props.min}
+        max={props.max}
       />
     </div>
   )
@@ -121,8 +123,8 @@ class Slide extends Component {
               <textarea value={this.state.caption || ''} onChange={this.handleChange}
                   placeholder="Caption here..." name="caption">
               </textarea>
-              <DateInput label="Start" value={this.state.start || ''} onChange={this.handleChange} id={"start"+this.state._id} name="start" />
-              <DateInput label="End"   value={this.state.end || ''}   onChange={this.handleChange} id={"end"  +this.state._id} name="end"   />
+              <DateInput label="Start" value={this.state.start || ''} max={this.state.end}   onChange={this.handleChange} id={"start"+this.state._id} name="start" />
+              <DateInput label="End"   value={this.state.end || ''}   min={this.state.start} onChange={this.handleChange} id={"end"  +this.state._id} name="end"   />
               <Checkbox label="Visible"    checked={this.state.visible}    onChange={this.handleCheckboxChange} name="visible"/>
               <Checkbox label="Fullscreen" checked={this.state.fullscreen} onChange={this.handleCheckboxChange} name="fullscreen"/>
               <div>

@@ -20,6 +20,8 @@ const multer =   require('multer')
 const instagram = require('./controllers/instagram.js')
 const slide =     require('./controllers/slide.js')
 const upload =    require('./controllers/upload.js')
+const errorHandlers = require('./errors/errorHandlers.js')
+const FileFilterError = require('./errors/customErrors.js')
 
 // #Helpers
 const checkAdminRights = require('./helpers').checkAdminRights
@@ -43,11 +45,11 @@ const fileFilter = function (req, file, cb){
         cb(null, valid)
     }
     else if (!only_one_dot || !alphanumeric_name)
-        cb(new Error("Invalid filename, only alphanumeric filenames with a file extension are allowed."))
+        cb(new FileFilterError("Invalid filename, only alphanumeric filenames with a file extension are allowed."))
     else if (!valid_file_extension)
-        cb(new Error("Invalid file extension, must be png, jpg, jpeg or gif."))
+        cb(new FileFilterError("Invalid file extension, must be png, jpg, jpeg or gif."))
     else if (!valid_mimetype)
-        cb(new Error("Invalid mimetype, must be image/png, image/jpeg or image/gif"))
+        cb(new FileFilterError("Invalid mimetype, must be image/png, image/jpeg or image/gif"))
 }
 
 let storage = multer.memoryStorage()
@@ -141,10 +143,7 @@ Endpoint functions:
 app.post('/api/screen/slides/save', cas.block, checkAdminRights, function(req,res){
     uploadSlideImage(req, res, function (err) {
         if (err) {
-            // An error occurred when uploading
-            console.log(err)
-            return res.status(400).json({ok:false, 
-                message: settings.debug ? err.message : "An error occurred when uploading"})
+            return errorHandlers.CreationError(req,res)(err)
         }
         else if (!req.file){
             // create slide from url, not file.
