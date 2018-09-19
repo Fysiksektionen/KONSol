@@ -4,6 +4,8 @@ import Slide from './components/Slide.js'
 import ErrorMessage from './components/ErrorMessage.js'
 import Cookies from 'js-cookie'
 
+const blankSlide = {tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:'', imageFile:null}
+
 class App extends Component {
   constructor() {
     super()
@@ -11,6 +13,7 @@ class App extends Component {
       user:{logged_in:false},
       slides:[]
     }
+    this.addSlide.bind(this)
     this.removeSlide.bind(this)
     fetch('api/me')
       .then(res=>res.json())
@@ -34,6 +37,12 @@ class App extends Component {
       })); 
   }
 
+  addSlide = (slide) => {
+    this.setState(prevState => {
+      return { slides: [slide].concat(prevState.slides) }
+    })
+  }
+
   removeSlide = (id) => {
     this.setState(prevState => {
       return { slides: prevState.slides.filter(slide => slide._id !== id) }
@@ -52,7 +61,7 @@ class App extends Component {
           <a href='http://localhost:8888/instagram' className="btn">Hämta nya Instagram-bilder</a>
         </div>
         <div className="slides">
-          <Slide initialState={{tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:''}} csrftoken={Cookies.get('XSRF-TOKEN')}/>
+          <Slide initialState={blankSlide} addSlide={this.addSlide} csrftoken={Cookies.get('XSRF-TOKEN')}/>
           {/*key is a unique key for React to optimise rerendering*/}
           {this.state.slides.length
               ? this.state.slides.slice(0).sort((a,b) => (b.created-a.created))

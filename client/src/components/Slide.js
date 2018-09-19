@@ -8,6 +8,8 @@ function DateInput (props) {
    props.id is just a unique DOM id.
    props.value is the datestring in format YYYY-MM-DD or an empty string
    props.name can be specified if using a generic onChange function.
+   props.min minimum value
+   props.max maximum value
   */
   return (
     <div className="date">
@@ -84,6 +86,18 @@ class Slide extends Component {
       return response.json()
     }).then((json) => {
       console.log(json)
+      if (json.ok && json.newSlide){
+        // if the slide is the blank empty slide (for adding new slides)
+        if (!this.state._id) {
+          // then add slide to view
+          this.props.addSlide(json.newSlide)
+          // and remove the image but keep the
+          // rest in order to ease adding images to events.
+          this.setState(prevState => {
+            return {imageFile: null}
+          })
+        }
+      }
     })
   }
 
