@@ -34,7 +34,7 @@ const slideSchema = new Schema({
     },
     filename: {
         type: String,
-        required: () => !this.remotely_hosted
+        required: function(){ return !this.remotely_hosted}
     }
 
     // user implementation
