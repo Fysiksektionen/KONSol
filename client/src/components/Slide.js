@@ -96,8 +96,11 @@ class Slide extends Component {
           this.setState(prevState => {
             return {imageFile: null}
           })
+          // Tell user everything went smoothly
+          this.props.addAlert({type:"success", message: "Saved slide!"})
         }
-      }
+        // show error message
+      } else {this.props.addAlert({type:"error", message:json.message})}
     })
   }
 
@@ -113,11 +116,13 @@ class Slide extends Component {
       .then(res => res.json())
       .then(json => {
         console.log(json)
-        if (json.n === 1) { // A (this) slide was removed on the backend
+        if (json.ok && json.n === 1) { // A (this) slide was removed on the backend
+          this.props.addAlert({type:"success", message: "Removed slide!"})
           this.props.removeSlide(this.state._id) // call parent remove.
         }
         else {
           // show error message
+          this.props.addAlert({type:"error", message: json.message})
         }
       })
   }
