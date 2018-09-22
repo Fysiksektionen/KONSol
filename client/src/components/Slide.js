@@ -96,11 +96,13 @@ class Slide extends Component {
           this.setState(prevState => {
             return {imageFile: null}
           })
-          // Tell user everything went smoothly
-          this.props.addAlert({type:"success", message: "Saved slide!"})
         }
+        // Tell user everything went smoothly
+        this.props.addAlert({type:"success", message: "Saved slide!"})
+      } else {
         // show error message
-      } else {this.props.addAlert({type:"error", message:json.message})}
+        this.props.addAlert({type:"error", message:json.message})
+      }
     })
   }
 

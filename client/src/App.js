@@ -1,10 +1,14 @@
 import React, { Component } from 'react';
+import { TransitionGroup, CSSTransition } from 'react-transition-group'
 import './App.css';
 import Slide from './components/Slide.js'
 import Alert from './components/Alert.js'
 import Cookies from 'js-cookie'
 
 const blankSlide = {tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:'', imageFile:null}
+
+const randomId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
 
 class App extends Component {
   constructor() {
@@ -17,6 +21,7 @@ class App extends Component {
     this.addSlide.bind(this)
     this.removeSlide.bind(this)
     this.addAlert.bind(this)
+    this.removeAlert.bind(this)
 
     fetch('api/me')
       .then(res=>res.json())
@@ -57,7 +62,13 @@ class App extends Component {
 
   addAlert = (alert) => {
     this.setState(prevState => {
-      return {alerts: prevState.alerts.concat(alert)}
+      return {alerts: prevState.alerts.concat({...alert, _id: randomId()})}
+    })
+  }
+
+  removeAlert = (id) => {
+    this.setState(prevState => {
+      return {alerts: prevState.alerts.filter(alert => alert._id !== id)}
     })
   }
 
@@ -85,7 +96,13 @@ class App extends Component {
           }
         </div>
         <div className="alerts">
-          {this.state.alerts.map(alert => <Alert type={alert.type} message={alert.message}/>)}
+          <TransitionGroup>
+            {this.state.alerts.map(alert => 
+              <CSSTransition classNames="alertTransition" key={alert._id} timeout={{ enter: 500, exit: 300 }}>
+                <Alert {...alert} handleRemove={this.removeAlert}/>
+              </CSSTransition>
+            )}
+          </TransitionGroup>
         </div>
       </div>
     );
