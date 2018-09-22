@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import '../css/Slide.css';
 import Checkbox from './Checkbox.js';
 
+const randomId = () => Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+
 // functional component
 function DateInput (props) {
   /*params: props.id, props.value, props.name and props.onChange
@@ -91,7 +93,10 @@ class Slide extends Component {
         if (!this.state._id) {
           // then add slide to view
           this.props.addSlide(json.newSlide)
-          // and remove the image but keep the
+          // then clear input so that if you select the same
+          // image again the onImageChange gets called.
+          document.getElementById('imageUploader').value = null
+          // finally remove the image but keep the
           // rest in order to ease adding images to events.
           this.setState(prevState => {
             return {imageFile: null}
@@ -136,7 +141,8 @@ class Slide extends Component {
           <div className="image-container" 
               style={{backgroundImage:"url(https://static.tutsplus.com/assets/elements/landingpage_tuts_icon_plus-8ca21c2c723d17a1958914d2200c8ade.svg)"}}
               onClick={() => this.refs.imageUploader.click() /*click the hidden file input tag*/}>
-            <input type="file" ref="imageUploader" onChange={this.handleImageChange} style={{display:"none"}} name="imageFile" accept="image/*"/>
+            <input type="file" ref="imageUploader" id="imageUploader" onChange={this.handleImageChange} style={{display:"none"}} 
+                name="imageFile" accept="image/jpeg,image/gif,image/png"/>
             {/* if there is an image to display, then display, otherwise don't */
               this.state.imageFile || this.state.url ? <img src={this.state.imageFile || this.state.url}/> : null}
           </div>
