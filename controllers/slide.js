@@ -15,7 +15,7 @@ exports.save = function(req, res) {
         .then(newSlide => {res.status(201); res.json({"ok":true, newSlide})})
         .catch(errorHandlers.CreationError(req,res))
     }
-    else return res.status(400).redirect(req.headers['referer'])
+    else return res.status(400).json({ok:false,message:"Please specify an image URL or select an image to upload."})
 }
 
 exports.getById = function(req, res) {
@@ -33,7 +33,7 @@ exports.removeById = function(req, res) {
 
     if (mongoose.Types.ObjectId.isValid(req.params.id)) {
         Slide.findById(req.params.id).then(slide => {
-            if (!slide) res.status(400).json(invalidIdResponse)
+            if (!slide) return res.status(400).json(invalidIdResponse)
             slide.remove()
             .then(removedSlide => res.status(200).json({ok: 1, n: 1, removedSlide}))
             .catch(err => res.status(500).json({

@@ -1,6 +1,7 @@
 const mongoose = require('mongoose')
 const fs = require('fs')
 const path = require('path')
+const settings = require('../settings.json')
 const Schema = mongoose.Schema
 const ValidationError =  mongoose.Error.ValidationError
 const ValidatorError = mongoose.Error.ValidatorError
