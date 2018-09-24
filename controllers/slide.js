@@ -4,12 +4,15 @@ const errorHandlers = require('../errors/errorHandlers.js')
 const settings = require('../settings.json')
 
 exports.getSlides = function(req, res) {
-    if (req.query.visible.toLowerCase() === 'true'){
-        return Slide.getVisible().then(slides => res.status(200).json(slides))
+    if (req.query.visible && req.query.visible.toLowerCase() === 'true'){
+        // fetch solely visible slides.
+        Slide.getVisible().then(slides => res.status(200).json(slides))
+        .catch(errorHandlers.InternalServerError(req,res)) // catch all
     }
     else {
         // Return all slides
-        return Slide.find().then(result => res.json(result))
+        Slide.find().then(result => res.json(result))
+        .catch(errorHandlers.InternalServerError(req,res)) // catch all   
     }
 }
 
@@ -25,6 +28,7 @@ exports.save = function(req, res) {
 
 exports.getById = function(req, res) {
     Slide.find({_id:req.params.id}).then(slide => res.json(slide))
+    .catch(errorHandlers.InternalServerError(req,res)) // catch all
 }
 
 // Currently a POST without a body. Could make the id a required part of the request body

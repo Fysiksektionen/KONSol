@@ -3,6 +3,17 @@ const errorChecks = require('./error-checks.js')
 const FileFilterError = require('./customErrors.js').FileFilterError
 const settings = require('../settings.json')
 
+const InternalServerError = (req, res) => err => {
+    console.log(err)
+    res.status(500).json({
+        ok:false, 
+        message:settings.debug ? err.message : "Internal server error",
+        errors: settings.debug ? err.errors  : undefined,
+        errorName: "InternalServerError"
+    })
+}
+exports.InternalServerError = InternalServerError
+
 exports.CreationError = (req, res) => err => {
     if (err instanceof mongoose.Error.ValidationError){
         res.status(400)
@@ -21,12 +32,6 @@ exports.CreationError = (req, res) => err => {
         // Can we catch any other known errors here? Either way we should log it with a real logger.
         // This is the downside to not using an error library.
         // log(err.message, err.errors)
-        console.log(err)
-        res.status(500).json({
-            ok:false, 
-            message:settings.debug ? err.message : "Internal server error",
-            errors: settings.debug ? err.errors  : undefined,
-            errorName: "InternalServerError"
-        })
+        InternalServerError(req,res)(err)
     }
 }
