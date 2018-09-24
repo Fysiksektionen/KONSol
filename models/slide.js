@@ -97,4 +97,17 @@ slideSchema.statics.save = function (requestBody) {
     return this.create({url, fullscreen, visible, start, end, caption, remotely_hosted, filename})
 }
 
+const is_visible = function(slide, now) {
+    if (slide.start && slide.end) return slide.visible || (slide.start <= now && now <= slide.end)
+    else if (slide.start) return slide.visible || (slide.start <= now)
+    else if (slide.end) return slide.visible && (now <= slide.end) // if now > end it should not show
+    else return slide.visible    
+}
+
+slideSchema.statics.getVisible = function() {
+    const now = new Date()
+    // only return slides which are visible
+    return this.find().then(slides => slides.filter(slide => is_visible(slide, now)))
+}
+
 module.exports = mongoose.model('Slide', slideSchema)

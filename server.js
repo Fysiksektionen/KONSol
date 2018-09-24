@@ -179,7 +179,7 @@ app.get('/api/me', cas.block, function(req, res){
 })
 
 // PUBLIC IN ORDER FOR RASPBERRY PI TO ACCESS IT.
-app.get('/api/screen/slides', slide.getAllSlides);
+app.get('/api/screen/slides', slide.getSlides);
 app.get('/api/screen/slides/:id',         cas.block,                   slide.getById);
 app.post('/api/screen/slides/:id/remove', cas.block, checkAdminRights, slide.removeById);
 

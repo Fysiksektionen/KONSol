@@ -3,9 +3,14 @@ const Slide = require('../models/slide')
 const errorHandlers = require('../errors/errorHandlers.js')
 const settings = require('../settings.json')
 
-exports.getAllSlides = function(req, res) {
-    // Return all slides
-    Slide.find().then(result => res.json(result))
+exports.getSlides = function(req, res) {
+    if (req.query.visible.toLowerCase() === 'true'){
+        return Slide.getVisible().then(slides => res.status(200).json(slides))
+    }
+    else {
+        // Return all slides
+        return Slide.find().then(result => res.json(result))
+    }
 }
 
 exports.save = function(req, res) {
