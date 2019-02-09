@@ -21,11 +21,10 @@ const instagram = require('./controllers/instagram.js')
 const slide =     require('./controllers/slide.js')
 const upload =    require('./controllers/upload.js')
 const errorHandlers = require('./errors/errorHandlers.js')
-const FileFilterError = require('./errors/customErrors.js')
+const FileFilterError = require('./errors/customErrors.js').FileFilterError
 
 // #Helpers
 const checkAdminRights = require('./helpers').checkAdminRights
-const validCharacters =  require('./helpers').validCharacters
 
 // ####################################################################
 //            Application setup
@@ -37,7 +36,7 @@ const fileFilter = function (req, file, cb){
     // but there's no such thing as too thorough when it comes to accepting files from users.
     const extension = path.extname(file.originalname)
     const only_one_dot = file.originalname.split('.').length === 2
-    const valid_file_extension = ['.png','.jpg','.jpeg','.gif'].includes(extension)
+    const valid_file_extension = ['.png','.jpg','.jpeg','.gif'].includes(extension.toLowerCase())
     const valid_mimetype = ['image/png','image/jpeg','image/gif'].includes(file.mimetype)
     const valid = only_one_dot && valid_file_extension && valid_mimetype
     if (valid){
