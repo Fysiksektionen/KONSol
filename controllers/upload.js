@@ -47,6 +47,13 @@ const streamFromBuffer = function(buffer){
     return stream
 }
 
+const finalCallback = (req,res) => function(err, newSlide){
+    if (err) {
+        return errorHandlers.CreationError(req, res)(err)
+    }
+    res.status(201).json({ok:true, newSlide})
+}
+
 // ##################
 // Upload controllers
 // ##################
@@ -69,12 +76,7 @@ exports.gifUpload = function(req, res) {
             .pipe(new GIFDecoder({indexed: true}))  // decode gif
             .pipe(new GIFEncoder) // reencode gif to get rid of malicious code after EOF
 
-        writeAndStore(fileName, req.body, stream, function(err, newSlide){
-            if (err) {
-                return errorHandlers.CreationError(req, res)(err)
-            }
-            res.status(201).json({ok:true, newSlide})
-        })
+        writeAndStore(fileName, req.body, stream, finalCallback(req,res))
     }
     else return res.status(400).json({ok:false,message:"Invalid file format. If you believe this was a mistake, contact webmaster@f.kth.se. In the meantime you can host it on an image hosting site such as imgur and link to it instead."})
 }
@@ -107,12 +109,7 @@ exports.pngUpload = function(req, res) {
             }
             cleanPng.pack()
             // Write to filesystem
-            writeAndStore(fileName, req.body, cleanPng, function(err, newSlide){
-                if (err) {
-                    return errorHandlers.CreationError(req, res)(err)
-                }
-                res.status(201).json({ok:true, newSlide})
-            })
+            writeAndStore(fileName, req.body, cleanPng, finalCallback(req,res))
         })
 }
 
@@ -129,14 +126,9 @@ exports.jpgUpload = function(req, res) {
     // to the original. 100 being best approximation.
     const quality = 100
     const newJpeg = jpeg.encode(jpegData, quality)
-
+    const stream = streamFromBuffer(newJpeg.data)
     const fileName = randomId() + '.jpg'
-    fs.writeFile(getFilepath(fileName), newJpeg.data, (err) => {
-        if (err){
-            console.log("ERROR:", err)
-            return res.status(500).json({ok:false, message:"Internal server error, failed to write to filesystem."})
-        }
-        res.status(201).json({ok:true})
-    })
+    
+    writeAndStore(fileName, req.body, stream, finalCallback(req,res))
 }
 
