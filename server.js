@@ -39,21 +39,24 @@ const fileFilter = function (req, file, cb){
     const only_one_dot = file.originalname.split('.').length === 2
     const valid_file_extension = ['.png','.jpg','.jpeg','.gif'].includes(extension)
     const valid_mimetype = ['image/png','image/jpeg','image/gif'].includes(file.mimetype)
-    const alphanumeric_name = validCharacters(file.originalname)
-    const valid = only_one_dot && valid_file_extension && valid_mimetype && alphanumeric_name
+    const valid = only_one_dot && valid_file_extension && valid_mimetype
     if (valid){
         cb(null, valid)
     }
-    else if (!only_one_dot || !alphanumeric_name)
-        cb(new FileFilterError("Invalid filename, only alphanumeric filenames with a file extension are allowed."))
+    else if (!only_one_dot)
+        cb(new FileFilterError("Bad filename."))
     else if (!valid_file_extension)
         cb(new FileFilterError("Invalid file extension, must be png, jpg, jpeg or gif."))
     else if (!valid_mimetype)
-        cb(new FileFilterError("Invalid mimetype, must be image/png, image/jpeg or image/gif"))
+        cb(new FileFilterError("Invalid mimetype, must be image/png, image/jpeg or image/gif."))
 }
 
 let storage = multer.memoryStorage()
-const uploadSlideImage = multer({fileFilter, storage}).single('imageFile')
+const uploadSlideImage = multer({
+    fileFilter,
+    storage,
+    limits: {fieldSize: 10 * 1024 * 1024, fileSize: 5 * 1024 * 1024 } // max 5 MB files
+}).single('imageFile')
 
 // #Mongoose setup
 mongoose.Promise = Promise

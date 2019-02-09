@@ -27,6 +27,10 @@ exports.CreationError = (req, res) => err => {
         res.status(400)
         res.json({message: err.message, status:400, ok:false, errorName:'FileFilterError'})   
     }
+    else if (err.code === "LIMIT_FIELD_VALUE" || err.code === "LIMIT_FILE_SIZE"){
+        res.status(400) //field or file too large
+        res.json({message:err.message, status:400, ok:false, errorName:'MulterError'})
+    }
     else {
         // TODO better logging.
         // Can we catch any other known errors here? Either way we should log it with a real logger.
