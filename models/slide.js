@@ -86,9 +86,9 @@ slideSchema.statics.createFromIG = function (IGposts){
     }))
 }
 
-slideSchema.statics.save = function (requestBody) {
+slideSchema.statics.save = function (requestBody, remotely_hosted, filename) {
     // unpack variables to avoid users setting `created` field.
-    const {_id, url, fullscreen, visible, start, end, caption, remotely_hosted, filename} = requestBody
+    const {_id, url, fullscreen, visible, start, end, caption} = requestBody
     if (_id) {
         // if id specified, try to find and update
         return this.findByIdAndUpdate(_id, {url, fullscreen, visible, start, end, caption}, {new:true})

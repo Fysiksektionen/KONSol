@@ -32,9 +32,8 @@ const writeAndStore = function(fileName, body, stream, callback){
         .on('error', callback)
         .on('finish', function(){
             body.url = getFilepath(fileName, 'url')
-            body.remotely_hosted = false
-            body.filename = fileName
-            Slide.save(body).then(slide => {
+            const remotely_hosted = false
+            Slide.save(body, remotely_hosted, fileName).then(slide => {
                 // once resource is created, call callback which will send client result.
                 return callback(null, slide)
             }).catch(callback)
