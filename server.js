@@ -20,11 +20,12 @@ const multer =   require('multer')
 const instagram = require('./controllers/instagram.js')
 const slide =     require('./controllers/slide.js')
 const upload =    require('./controllers/upload.js')
+const screen =    require('./controllers/screen.js')
 const errorHandlers = require('./errors/errorHandlers.js')
-const FileFilterError = require('./errors/customErrors.js').FileFilterError
 
 // #Helpers
 const checkAdminRights = require('./helpers').checkAdminRights
+const FileFilterError = require('./errors/customErrors.js').FileFilterError
 
 // ####################################################################
 //            Application setup
@@ -180,7 +181,10 @@ app.get('/api/me', cas.block, function(req, res){
     })
 })
 
+// Metadata about screen such as what slides to show.
+app.post('/api/screen', cas.block, checkAdminRights, screen.saveTags)
 // PUBLIC IN ORDER FOR RASPBERRY PI TO ACCESS IT.
+app.get('/api/screen', screen.getTags)
 app.get('/api/screen/slides', slide.getSlides);
 app.get('/api/screen/slides/:id',         cas.block,                   slide.getById);
 app.post('/api/screen/slides/:id/remove', cas.block, checkAdminRights, slide.removeById);

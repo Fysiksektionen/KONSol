@@ -7,7 +7,7 @@ const PNG = require('pngjs').PNG
 const jpeg = require('jpeg-js')
 const settings = require('../settings.json')
 const Stream = require('stream') // for turning Buffer to stream for the pipe API.
-const Slide = require('../models/slide.js')
+const Slide = require('../models/slide.js').Slide
 const errorHandlers = require('../errors/errorHandlers.js')
 
 const crypto = require('crypto')
@@ -32,6 +32,7 @@ const writeAndStore = function(fileName, body, stream, callback){
         .on('error', callback)
         .on('finish', function(){
             body.url = getFilepath(fileName, 'url')
+            // Set remotely hosted to false here, indicates the slide has an image stored locally.
             const remotely_hosted = false
             Slide.save(body, remotely_hosted, fileName).then(slide => {
                 // once resource is created, call callback which will send client result.
@@ -39,6 +40,7 @@ const writeAndStore = function(fileName, body, stream, callback){
             }).catch(callback)
         })
 }
+
 const streamFromBuffer = function(buffer){
     stream = new Stream.Duplex()
     stream.push(buffer)

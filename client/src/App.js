@@ -3,6 +3,7 @@ import { TransitionGroup, CSSTransition } from 'react-transition-group'
 import './App.css';
 import Slide from './components/Slide.js'
 import Alert from './components/Alert.js'
+import Tags from './components/Tags.js'
 import Cookies from 'js-cookie'
 
 const blankSlide = {tags: [], url: '', start: '',end: '', visible: false, fullscreen: false, caption:'', imageFile:null}
@@ -25,9 +26,13 @@ class App extends Component {
 
     fetch('api/me')
       .then(res=>res.json())
-      .then(user => {
-          user.logged_in = true
-          this.setState({user})
+      .then(response => {
+          if (response.ok) {
+            this.setState({user:{logged_in:true,name:response.name,info:response.info}})
+          }
+          else {
+            this.setState({user:{logged_in:false}})
+          }
       })
       .catch(err => this.setState({user:{logged_in:false}}))
   }
@@ -45,7 +50,7 @@ class App extends Component {
       })
       .then(slides => this.setState((prevstate) => {
         return { slides : prevstate.slides.concat(slides) }
-      })); 
+      }))
   }
 
   addSlide = (slide) => {
@@ -78,10 +83,13 @@ class App extends Component {
         <div className="greeting">
           <h1>KONSol</h1>
           <p>Fjärrkontrollera skärmen i Konsulatet!</p>
-          { this.state.user.logged_in 
-            ? <p>Welcome {this.state.user.name}!</p> 
-            : <a href='http://localhost:8888/login?returnTo=http://localhost:8888' className="btn">Logga in med KTH</a>}
-          <a href='http://localhost:8888/instagram' className="btn">Hämta nya Instagram-bilder</a>
+          <Tags addAlert={this.addAlert} csrftoken={Cookies.get('XSRF-TOKEN')}/>
+          <div className="greeting-buttons">
+            { this.state.user.logged_in 
+              ? <p>Welcome {this.state.user.name}!</p> 
+              : <a href='http://localhost:8888/login?returnTo=http://localhost:8888' className="btn">Logga in med KTH</a>}
+            <a href='http://localhost:8888/instagram' className="btn">Hämta nya Instagram-bilder</a>
+          </div>
         </div>
         <div className="slides">
           <Slide initialState={blankSlide} addSlide={this.addSlide} addAlert={this.addAlert} csrftoken={Cookies.get('XSRF-TOKEN')}/>

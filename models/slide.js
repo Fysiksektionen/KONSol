@@ -2,6 +2,7 @@ const mongoose = require('mongoose')
 const fs = require('fs')
 const path = require('path')
 const settings = require('../settings.json')
+const Screen = require('./screen.js')
 const Schema = mongoose.Schema
 const ValidationError =  mongoose.Error.ValidationError
 const ValidatorError = mongoose.Error.ValidatorError
@@ -13,7 +14,14 @@ const slideSchema = new Schema({
         unique: true
     },
     caption: String,
-    tags: [String],
+    tags: {
+        type: [String],
+        default: [],
+        validate: {
+            validator: function(tags){return !tags.some(tag => !tag.length)}, // no empty '' tags
+            message: props => `Error: tag:"${props.value}" is an empty string`
+          },
+    },
     start: Date,
     end: Date,
     visible: {
@@ -34,7 +42,8 @@ const slideSchema = new Schema({
     },
     filename: {
         type: String,
-        required: function(){ return !this.remotely_hosted}
+        // if not remotely hosted, require filename.
+        required: function(){ return !this.remotely_hosted} 
     }
 
     // user implementation
@@ -44,7 +53,7 @@ const slideSchema = new Schema({
     // }
 })
 
-slideSchema.pre('validate', function(next) {
+slideSchema.pre('save', function(next) {
     if (this.start && this.end){
         if (this.start > this.end) {
             let err = new ValidationError(this)
@@ -88,16 +97,24 @@ slideSchema.statics.createFromIG = function (IGposts){
 
 slideSchema.statics.save = function (requestBody, remotely_hosted, filename) {
     // unpack variables to avoid users setting `created` field.
-    const {_id, url, fullscreen, visible, start, end, caption} = requestBody
+    const {_id, url, fullscreen, visible, start, end, caption, tags} = requestBody
     if (_id) {
         // if id specified, try to find and update
-        return this.findByIdAndUpdate(_id, {url, fullscreen, visible, start, end, caption}, {new:true})
+        return this.findOne({_id}).then(slide=>{
+            slide.set({url, fullscreen, visible, start, end, caption, tags})
+            return slide.save() // this triggers the pre('save',...) call
+        })
     }
     // No existing id, create new slide.
-    return this.create({url, fullscreen, visible, start, end, caption, remotely_hosted, filename})
+    return this.create({url, fullscreen, visible, start, end, caption, tags, remotely_hosted, filename})
 }
 
-const is_visible = function(slide, now) {
+const is_visible = function(slide, screen, now) {
+    // for now there should only be one screen, otherwise change this to another query.
+    // if not at least one tag of a slide is in the filter then it is not visible 
+    if (screen.filter_tags.length && screen.filter_tags[0]){
+        if (!slide.tags.some(tag => screen.filter_tags.includes(tag))) return false
+    }
     if (slide.start && slide.end) return slide.visible || (slide.start <= now && now <= slide.end)
     else if (slide.start) return slide.visible || (slide.start <= now)
     else if (slide.end) return slide.visible && (now <= slide.end) // if now > end it should not show
@@ -107,7 +124,8 @@ const is_visible = function(slide, now) {
 slideSchema.statics.getVisible = function() {
     const now = new Date()
     // only return slides which are visible
-    return this.find().then(slides => slides.filter(slide => is_visible(slide, now)))
+    return Screen.findOne().then(screen => this.find().then(slides => slides.filter(slide => is_visible(slide, screen, now))))
 }
 
-module.exports = mongoose.model('Slide', slideSchema)
+module.exports.slideSchema = slideSchema
+module.exports.Slide = mongoose.model('Slide', slideSchema)

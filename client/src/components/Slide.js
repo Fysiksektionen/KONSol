@@ -30,6 +30,7 @@ class Slide extends Component {
   constructor(props) {
     super(props)
     this.state = {...this.props.initialState}
+    this.state.tags=this.state.tags.join(" ") // join because the text field is not a list
 
     this.handleChange = this.handleChange.bind(this)
     this.handleCheckboxChange = this.handleCheckboxChange.bind(this)
@@ -60,7 +61,6 @@ class Slide extends Component {
   }
 
   handleSubmit (event) {
-    // TODO: probably want to update the state based on the response.
     event.preventDefault() // Stop form submit
     // create FormData from form-tag
     const formData = new FormData(event.target);
@@ -73,6 +73,11 @@ class Slide extends Component {
     // set caption manually because it isn't registered as a field on the form-tag,
     // not even with form-id references
     formData.set('caption', this.state.caption)
+    // Set tags after converting to array because it is not stored as a string
+    formData.delete('tags'); // this is a string, but we want an array as below
+    // avoids passing things like [''] if the tags field was empty
+    const tags = this.state.tags.trim().split(" ").filter(tag => tag.length)
+    tags.length ? tags.forEach(tag => tag.length ? formData.append('tags[]',tag) : null) : null
 
     const options = {
       method: "POST",
@@ -162,6 +167,7 @@ class Slide extends Component {
                 <input type="text" placeholder="URL" value={this.state.imageFile ? '' : this.state.url} name="url" 
                   disabled={!!this.state.imageFile} onChange={this.handleChange}
                 />
+                <input type="text" placeholder="Tags" value={this.state.tags} name="tags" onChange={this.handleChange}/>
               </div>
           </div>
           <div className="slide-footer">

@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const Slide = require('../models/slide')
+const Slide = require('../models/slide').Slide
 const errorHandlers = require('../errors/errorHandlers.js')
 const settings = require('../settings.json')
 

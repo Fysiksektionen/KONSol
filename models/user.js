@@ -1,5 +1,5 @@
 const mongoose = require('mongoose')
-const Slide = require('./slide.js')
+const Slide = require('./slide.js').Slide
 
 const Schema = mongoose.Schema
 

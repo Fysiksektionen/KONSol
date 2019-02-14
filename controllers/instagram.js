@@ -3,7 +3,7 @@ const querystring = require('querystring')
 const request = require('request')
 const settings = require('../settings.json')
 const User = require('../models/user.js')
-const Slide = require('../models/slide.js')
+const Slide = require('../models/slide.js').Slide
 const errorHandlers = require('../errors/errorHandlers.js')
 
 const redirect_uri = 
