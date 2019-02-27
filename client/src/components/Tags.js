@@ -50,7 +50,7 @@ class Tags extends Component {
     render() {
         return (
             <div className="current-tags">
-              <input className="tag-input" type="text" value={this.state.tags || ''} placeholder="Taggar..." name="tags" onChange={this.handleChange}/>
+              <input className="tag-input" type="text" value={this.state.tags || ''} placeholder="Taggar (flera separeras med mellanslag)" name="tags" onChange={this.handleChange}/>
               <input type="submit" value="Save" className="btn" onClick={this.saveTags}/>
             </div>
         )}
