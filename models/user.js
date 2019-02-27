@@ -8,6 +8,11 @@ userSchema = new Schema({
         type: String,
         required: true
     },
+    info: {
+        givenName:String,
+        familyName:String,
+        id:String
+    },
     cached_ig_access_token: String
 })
 
