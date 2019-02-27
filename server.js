@@ -222,6 +222,18 @@ app.use((err, req, res, next) => {
 // ####################################################################
 const PORT = settings.PORT || 8888
 
+const Screen=require('./models/screen')
+// for first time setup
+Screen.findOne().then(screen => {
+    // if no screen found
+    if (!screen) { 
+        // then save first and only screen document
+        let initScreen = new Screen({filter_tags:""})
+        initScreen.save()
+        console.log("Initialised screen")
+    }
+})
+
 db.on('error', console.error.bind(console, 'MongoDB connection error:'));
 db.once('open', () => {
     app.locals.db = db;
