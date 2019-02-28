@@ -58,7 +58,7 @@ exports.update = function(req, res) {
         }
         else {
             // login and redirect to this endpoint again to retry.
-            res.redirect('http://localhost:8888/login?returnTo=http://localhost:8888/instagram')
+            res.redirect(settings.service_url+'/login?returnTo='+settings.service_url+'/instagram')
         }
     })
 }
