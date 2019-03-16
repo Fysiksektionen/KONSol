@@ -9,9 +9,7 @@ userSchema = new Schema({
         required: true
     },
     info: {
-        givenName:String,
-        familyName:String,
-        id:String
+        kthid:String
     },
     cached_ig_access_token: String
 })
