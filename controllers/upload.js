@@ -23,7 +23,7 @@ const randomId = function () {
 const getFilepath = function (fileName, format){
     // if format === 'url' then return an url to the resource.
     // else return the filesystem path to the file.
-    const base = format === 'url' ? '/img/' : settings.uploads_path
+    const base = format === 'url' ? '/konsol/img/' : settings.uploads_path
     return path.join(base, fileName)
 }
 

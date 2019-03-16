@@ -38,7 +38,7 @@ exports.update = function(req, res) {
                 .then(media => {
                     if (media.error === "UnexpectedResponseError"){
                         // cached access token was probably invalid, login again to fetch a new one.
-                        res.redirect('/instagram/login')
+                        res.redirect(settings.service_url+'/instagram/login')
                     }
                     else {
                         // All went well, cache access token and create slides from data.
@@ -53,7 +53,7 @@ exports.update = function(req, res) {
                 .catch(err => {console.log("GOTCHA", err);res.sendStatus(500)})
             }
             else {
-                res.redirect('/instagram/login')
+                res.redirect(settings.service_url+'/instagram/login')
             }
         }
         else {
