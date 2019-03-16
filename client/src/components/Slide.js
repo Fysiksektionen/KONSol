@@ -77,7 +77,7 @@ class Slide extends Component {
     formData.delete('tags'); // this is a string, but we want an array as below
     // avoids passing things like [''] if the tags field was empty
     const tags = this.state.tags.trim().split(" ").filter(tag => tag.length)
-    tags.length ? tags.forEach(tag => tag.length ? formData.append('tags[]',tag) : null) : null
+    if (tags.length) tags.forEach(tag => tag.length ? formData.append('tags[]',tag) : null)
 
     const options = {
       method: "POST",
