@@ -6,7 +6,7 @@
     "js-cookie": "^2.2.0",
     "react": "^16.4.2",
     "react-dom": "^16.4.2",
-    "react-scripts": "1.1.5",
+    "react-scripts": "^2.1.5",
     "react-transition-group": "^2.6.0"
   },
   "scripts": {
@@ -15,5 +15,11 @@
     "test": "react-scripts test --env=jsdom",
     "eject": "react-scripts eject"
   },
-  "proxy": "http://localhost:8888"
+  "proxy": "http://localhost:8888",
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
 }
