@@ -1,0 +1,26 @@
+{
+  "name": "client",
+  "homepage":"https://f.kth.se/konsol",
+  "version": "0.1.0",
+  "private": true,
+  "dependencies": {
+    "js-cookie": "^2.2.0",
+    "react": "^16.4.2",
+    "react-dom": "^16.4.2",
+    "react-scripts": "^2.1.8",
+    "react-transition-group": "^2.6.0"
+  },
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test --env=jsdom",
+    "eject": "react-scripts eject"
+  },
+  "proxy": "http://localhost:8888",
+  "browserslist": [
+    ">0.2%",
+    "not dead",
+    "not ie <= 11",
+    "not op_mini all"
+  ]
+}
