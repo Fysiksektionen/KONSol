@@ -34,7 +34,7 @@ const writeAndStore = function(fileName, body, stream, callback){
             body.url = getFilepath(fileName, 'url')
             // Set remotely hosted to false here, indicates the slide has an image stored locally.
             const remotely_hosted = false
-            Slide.save(body, remotely_hosted, fileName).then(slide => {
+            Slide.saveSlide(body, remotely_hosted, fileName).then(slide => {
                 // once resource is created, call callback which will send client result.
                 return callback(null, slide)
             }).catch(callback)
