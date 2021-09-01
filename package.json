@@ -23,7 +23,7 @@
     "jpeg-js": "^0.3.4",
     "mongoose": "^5.7.5",
     "multer": "^1.3.0",
-    "node-fetch": "^2.1.2",
+    "node-fetch": "^2.6.1",
     "pngjs": "^3.3.3",
     "querystring": "^0.2.0",
     "react-transition-group": "^2.4.0",
