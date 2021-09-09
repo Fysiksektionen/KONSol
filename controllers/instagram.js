@@ -6,9 +6,7 @@ const User = require('../models/user.js')
 const Slide = require('../models/slide.js').Slide
 const errorHandlers = require('../errors/errorHandlers.js')
 
-const redirect_uri = 
-    settings.OAuth.REDIRECT_URI || 
-    'http://localhost:8888/callback'
+const redirect_uri = process.env.SERVER_PUBLIC_URL + settings.OAuth.REDIRECT_URI
 
 // Helper function
 const fetchMedia = access_token => 
@@ -38,14 +36,14 @@ exports.update = function(req, res) {
                 .then(media => {
                     if (media.error === "UnexpectedResponseError"){
                         // cached access token was probably invalid, login again to fetch a new one.
-                        res.redirect(settings.service_url+'/instagram/login')
+                        res.redirect(process.env.SERVER_PUBLIC_URL+'/instagram/login')
                     }
                     else {
                         // All went well, cache access token and create slides from data.
                         user.cacheToken(access_token)
                         Promise.all(Slide.createFromIG(media)) // returns a map of promises of slides, so we Promise.all
                         .then(slides => res.status(201).redirect(
-                            process.env.KONSOL_NODE_ENV === 'production' ?  settings.service_url : 'http://localhost:3000'
+                            process.env.KONSOL_NODE_ENV === 'production' ?  process.env.SERVER_PUBLIC_URL : process.env.CLIENT_ORIGIN
                         ))
                         .catch(errorHandlers.CreationError(req, res))
                     }
@@ -53,12 +51,12 @@ exports.update = function(req, res) {
                 .catch(err => {console.log("GOTCHA", err);res.sendStatus(500)})
             }
             else {
-                res.redirect(settings.service_url+'/instagram/login')
+                res.redirect(process.env.SERVER_PUBLIC_URL + '/instagram/login')
             }
         }
         else {
             // login and redirect to this endpoint again to retry.
-            res.redirect(settings.service_url+'/login?returnTo='+settings.service_url+'/instagram')
+            res.redirect(process.env.SERVER_PUBLIC_URL + '/login?returnTo=' + process.env.SERVER_PUBLIC_URL + '/instagram')
         }
     })
 }
@@ -105,7 +103,7 @@ exports.callback = function(req, res) {
             console.log(error)
         }
         const access_token = body.access_token
-        const uri = settings.OAuth.FRONTEND_URI || "http://localhost:8888"
+        const uri = process.env.SERVER_PUBLIC_URL + settings.OAuth.FRONTEND_URI || process.env.SERVER_PUBLIC_URL
         res.redirect(uri + '?access_token=' + access_token)
     })
 }

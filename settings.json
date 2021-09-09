@@ -1,5 +1,4 @@
 {
-    "service_url":"http://localhost:8888",
     "uploads_path":"./client/public/img",
     "debug":true,
     "DB_URL":"mongodb://localhost:27017/KONSol",
@@ -7,7 +6,7 @@
     "dev_mode_is_admin":true,
     "dev_mode_user":"fdev@fysiksektionen.se",
     "OAuth": {
-        "REDIRECT_URI":"http://localhost:8888/instagram/callback",
-        "FRONTEND_URI":"http://localhost:8888/instagram"
+        "REDIRECT_URI":"/instagram/callback",
+        "FRONTEND_URI":"/instagram"
     }
 }
