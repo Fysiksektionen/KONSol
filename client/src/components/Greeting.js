@@ -13,7 +13,7 @@ function Greeting() {
     const [user, setUser] = useState(undefined);
 
     useEffect(() => {
-        fetch('/me')
+        fetch(process.env.REACT_APP_ROOT_URL_PATH + '/me')
             .then(response => response.json())
             .then(response => {
                 if (response.user !== undefined) {
@@ -26,7 +26,7 @@ function Greeting() {
 
     function responseGoogleSuccess(callbackData) {
         console.log(callbackData);
-        fetch('/login', {
+        fetch(process.env.REACT_APP_ROOT_URL_PATH + '/login', {
             method: 'POST',
             body: JSON.stringify({token: callbackData.tokenId}),
             headers: {

@@ -87,7 +87,7 @@ class Slide extends Component {
         "XSRF-TOKEN": this.props.csrftoken
       }
     }
-    fetch('/api/screen/slides/save', options).then((response)=>{
+    fetch(process.env.REACT_APP_ROOT_URL_PATH + '/api/screen/slides/save', options).then((response)=>{
       // TODO: if response was not ok, display the error message received
       //       and prevent crashing from call to undefined.
       return response.json()
@@ -124,7 +124,7 @@ class Slide extends Component {
         "XSRF-TOKEN": this.props.csrftoken
       }
     }
-    fetch('/api/screen/slides/'+this.state._id+'/remove', options)
+    fetch(process.env.REACT_APP_ROOT_URL_PATH + '/api/screen/slides/'+this.state._id+'/remove', options)
       .then(res => res.json())
       .then(json => {
         console.log(json)

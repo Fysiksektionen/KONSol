@@ -12,7 +12,7 @@ function Slides() {
     const [slides, setSlides] = useState([]);
 
     useEffect(() => {
-        fetch('/api/screen/slides')
+        fetch(process.env.REACT_APP_ROOT_URL_PATH + '/api/screen/slides')
             .then(res =>  {
                 if (res.ok || res.status === 304) {
                     return res.json()
