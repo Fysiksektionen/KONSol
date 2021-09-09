@@ -1,0 +1,13 @@
+.greeting {
+    font-family: Lato;
+    text-align: center;
+    position: relative;
+    top: 4%;
+    left: 1%;
+    padding-bottom:20px;
+}
+
+.greeting-buttons {
+    margin-top:20px;
+    margin-bottom:20px;
+}

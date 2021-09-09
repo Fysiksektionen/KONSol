@@ -16,7 +16,7 @@ class Tags extends Component {
           }
           else {
             this.props.addAlert({type:"error", message:"Error: Could not load current tags"}) 
-            return []
+            return {tags: []}
           }
         })
         .then(response => this.setState({tags: response.tags.join(" ")}))
