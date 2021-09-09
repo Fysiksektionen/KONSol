@@ -16,7 +16,6 @@ function Greeting() {
         fetch('/me')
             .then(response => response.json())
             .then(response => {
-                console.log(response.user);
                 if (response.user !== undefined) {
                     setUser(response.user);
                     setLoggedIn(true)
@@ -37,7 +36,7 @@ function Greeting() {
             }
         })
             .then(res => res.json())
-            .then(res => { setLoggedIn(res.loggedIn) })
+            .then(res => { setLoggedIn(res.loggedIn); setUser(res.user); })
             .catch(console.error);
     }
     function responseGoogleFailure(callbackData) {
@@ -51,7 +50,7 @@ function Greeting() {
             <Tags addAlert={alertRegisterContextValue.addAlert} csrftoken={Cookies.get('XSRF-TOKEN')}/>
             <div className="greeting-buttons">
                 { loggedIn
-                    ? <p>Welcome {user.name}!</p> 
+                    ? <p>Welcome {user?.name}!</p> 
                     : <GoogleLogin
                         clientId={process.env.REACT_APP_CLIENT_ID}
                         onSuccess={responseGoogleSuccess}

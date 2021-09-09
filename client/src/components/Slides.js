@@ -37,7 +37,7 @@ function Slides() {
     return (
         <div className="slides">
             <Slide initialState={blankSlide} addSlide={addSlide} addAlert={alertRegisterContextValue.addAlert} csrftoken={Cookies.get('XSRF-TOKEN')}/>
-            {slides.length ?? slides
+            {slides.length !== 0 ? slides
                     .slice(0)
                     .sort((a, b) => (b.created - a.created))
                     .map(slide =>
@@ -49,6 +49,7 @@ function Slides() {
                             addAlert={alertRegisterContextValue.addAlert}
                         />
                     )
+                    :<></>
             }
         </div>
     )

@@ -167,7 +167,7 @@ app.post('/login', (req, res) => {
             if (user) {
                 req.session.authenticated = true;
                 req.session.user = user;
-                res.status(200).json({loggedIn: true});
+                res.status(200).json({loggedIn: true, user: req.session.user});
             } else {
                 res.status(403).json({loggedIn: false});
             }
