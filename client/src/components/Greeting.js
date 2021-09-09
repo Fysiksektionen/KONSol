@@ -3,9 +3,12 @@ import Tags from './Tags'
 import Cookies from 'js-cookie'
 import GoogleLogin from 'react-google-login';
 import '../css/Greeting.css';
+import { AlertRegisterContext } from "./Alerts";
 
 
 function Greeting() {
+    const alertRegisterContextValue = useContext(AlertRegisterContext);
+
     const [loggedIn, setLoggedIn] = useState(false);
     const [user, setUser] = useState(undefined);
 
@@ -45,7 +48,7 @@ function Greeting() {
         <div className="greeting">
             <h1>KONSol</h1>
             <p>Fjärrkontrollera skärmen i Konsulatet!</p>
-            {/* <Tags addAlert={this.addAlert} csrftoken={Cookies.get('XSRF-TOKEN')}/> */}
+            <Tags addAlert={alertRegisterContextValue.addAlert} csrftoken={Cookies.get('XSRF-TOKEN')}/>
             <div className="greeting-buttons">
                 { loggedIn
                     ? <p>Welcome {user.name}!</p> 

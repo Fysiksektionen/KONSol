@@ -18,7 +18,7 @@ function Slides() {
                     return res.json()
                 }
                 else {
-                    this.addAlert({type:"error", message:"Error: Could not load slides"}) 
+                    alertRegisterContextValue.addAlert({type:"error", message:"Error: Could not load slides"}) 
                     return []
                 }
             })
