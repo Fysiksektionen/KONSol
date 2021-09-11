@@ -112,7 +112,7 @@ const requireLoggedIn = (req, res, next) => {
     if (req.session?.authenticated) {
         next();
     } else {
-        res.status(403).send();
+        res.status(403).json({ok: false, message: "Unauthorized!"});
     }
 }
 

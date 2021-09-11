@@ -7,7 +7,7 @@ class Alert extends Component {
         if (this.props.type === "success"){
             // Decided error messages should stay up to make sure
             // the user has seen them. This is up for debate!
-            // Remove after 10 seconds if success-alert
+            // Remove after 5 seconds if success-alert
             const timeout = 5*1000
             setTimeout(() => {
                 this.remove()

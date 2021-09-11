@@ -14,18 +14,18 @@ function Greeting() {
 
     useEffect(() => {
         fetch(process.env.REACT_APP_ROOT_URL_PATH + '/me')
-            .then(response => response.json())
             .then(response => {
-                if (response.user !== undefined) {
-                    setUser(response.user);
-                    setLoggedIn(true)
+                if (response.ok) {
+                    const data = response.json();
+                    if (data.user !== undefined) {
+                        setUser(data.user);
+                        setLoggedIn(true)
+                    }
                 }
-            })
-            .catch()
-    }, []);
+            });
+    }, []); 
 
     function responseGoogleSuccess(callbackData) {
-        console.log(callbackData);
         fetch(process.env.REACT_APP_ROOT_URL_PATH + '/login', {
             method: 'POST',
             body: JSON.stringify({token: callbackData.tokenId}),
@@ -39,9 +39,7 @@ function Greeting() {
             .then(res => { setLoggedIn(res.loggedIn); setUser(res.user); })
             .catch(console.error);
     }
-    function responseGoogleFailure(callbackData) {
-        console.error(callbackData);
-    }
+    function responseGoogleFailure(callbackData) {}
 
     return (
         <div className="greeting">
