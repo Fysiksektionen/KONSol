@@ -11,6 +11,7 @@ const mongoose =          require('mongoose')
 const bodyParser =        require('body-parser')
 const MongoStore =        require('connect-mongo')(session)
 const cors =              require('cors')
+const csrf =              require('csurf')
 
 // #File uploading dependencies
 const path =     require('path')
@@ -94,6 +95,15 @@ app.use(session({
     cookie: { secure: process.env.KONSOL_NODE_ENV === "production", maxAge: halfDay },
 }));
 
+
+app.use(csrf());
+app.use((req, res, next) => {
+    //TODO: should also set express trust proxy to 1 in production (since under apache proxy).
+    const cookie_options = process.env.KONSOL_NODE_ENV === 'production' ? { sameSite: true } : {}
+    res.cookie('XSRF-TOKEN', req.csrfToken(), cookie_options); 
+    next();
+});
+
 // ####################################################################
 //            Middleware
 // ####################################################################
@@ -102,7 +112,7 @@ const requireLoggedIn = (req, res, next) => {
     if (req.session?.authenticated) {
         next();
     } else {
-        res.status(403).json({ok: false, message: "Unauthorized!"});
+        res.status(403).json({message: "Unautorized!"});
     }
 }
 
@@ -182,6 +192,15 @@ app.get('/me', requireLoggedIn, (req, res) => {
 
 app.get('/instagram/login', requireLoggedIn, instagram.authorize)
 app.get('/instagram/callback', instagram.callback)
+
+app.use((err, req, res, next) => {
+    if (err.code !== 'EBADCSRFTOKEN') return next(err);
+    res.status(403).json({
+        type: 'InvalidCSRFTokenError',
+        message: 'Invalid or missing CSRF token',
+        status: 403
+    });
+});
 
 // ####################################################################
 //            Launch app to port

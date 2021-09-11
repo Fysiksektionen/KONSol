@@ -14,13 +14,11 @@ function Greeting() {
 
     useEffect(() => {
         fetch(process.env.REACT_APP_ROOT_URL_PATH + '/me')
-            .then(response => {
-                if (response.ok) {
-                    const data = response.json();
-                    if (data.user !== undefined) {
-                        setUser(data.user);
-                        setLoggedIn(true)
-                    }
+            .then(response => response.json())
+            .then(data => {
+                if (data?.user !== undefined) {
+                    setUser(data.user);
+                    setLoggedIn(true);
                 }
             });
     }, []); 
