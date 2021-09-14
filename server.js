@@ -96,13 +96,13 @@ app.use(session({
 }));
 
 
-// app.use(csrf());
-// app.use((req, res, next) => {
-//     //TODO: should also set express trust proxy to 1 in production (since under apache proxy).
-//     const cookie_options = process.env.KONSOL_NODE_ENV === 'production' ? { sameSite: true } : {}
-//     res.cookie('XSRF-TOKEN', req.csrfToken(), cookie_options); 
-//     next();
-// });
+app.use(csrf());
+app.use((req, res, next) => {
+    //TODO: should also set express trust proxy to 1 in production (since under apache proxy).
+    const cookie_options = process.env.KONSOL_NODE_ENV === 'production' ? { sameSite: true } : {}
+    res.cookie('XSRF-TOKEN', req.csrfToken(), cookie_options);
+    next();
+});
 
 // ####################################################################
 //            Middleware
