@@ -9,9 +9,10 @@ const session = require('express-session');
 const auth = require('./lib/google-authentication.js');
 const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
-const MongoStore = require('connect-mongo')(session)
+const MongoStore = require('connect-mongo');
 const cors = require('cors')
 const csrf = require('csurf')
+
 
 // #File uploading dependencies
 const path = require('path')
@@ -62,8 +63,16 @@ const uploadSlideImage = multer({
 
 // #Mongoose setup
 mongoose.Promise = Promise
-mongoose.connect(settings.DB_URL)
-const db = mongoose.connection
+ mongoose.connect(settings.DB_URL, {useNewUrlParser: true})
+ const db =mongoose.connection
+
+// Avoid storing sessions in memory. TODO: Don't store images in memory
+const store = new MongoStore({
+    mongoUrl: settings.DB_URL
+    // TODO: re-enable this when
+    // https://github.com/jdesboeufs/connect-mongo/issues/277 is fixed:
+    // mongooseConnection: db
+});
 
 // #Express setup
 let app = express()
@@ -91,7 +100,7 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: new MongoStore({ url: settings.DB_URL, mongooseConnection: db }),
+    store: new MongoStore({ mongoUrl: settings.DB_URL, mongooseConnection: db }),
     cookie: { secure: process.env.KONSOL_NODE_ENV === "production", maxAge: halfDay },
 }));
 

@@ -6,13 +6,15 @@
     "type": "git",
     "url": "https://github.com/Acksell/KONSol.git"
   },
+  "type": "commonjs",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node server.js"
+    "start": "node server.js",
+    "dev": "nodemon server.js"
   },
   "dependencies": {
     "body-parser": "^1.18.3",
-    "connect-mongo": "^2.0.1",
+    "connect-mongo": "5.0.0",
     "cors": "^2.8.4",
     "csurf": "^1.9.0",
     "dotenv": "^10.0.0",
