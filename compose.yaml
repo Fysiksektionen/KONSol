@@ -1,6 +1,6 @@
 services:
   konsol-backend:
-    build: .
+    build: ./backend/
     container_name: backend
     #image: ghcr.io/fysiksektionen/KONSol
     ports: 
