@@ -1,7 +1,7 @@
 {
     "uploads_path":"./client/public/img",
     "debug":true,
-    "DB_URL":"mongodb://localhost:27017/KONSol",
+    "DB_URL":"mongodb://mongodb:27017/konsol",
     "dev_mode":false,
     "dev_mode_is_admin":true,
     "dev_mode_user":"fdev@fysiksektionen.se",
