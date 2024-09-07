@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useContext } from "react";
 import Tags from './Tags'
 import Cookies from 'js-cookie'
-import GoogleLogin from 'react-google-login';
+//import GoogleLogin from 'react-google-login';
+import { GoogleLogin } from '@react-oauth/google';
 import '../css/Greeting.css';
 import { AlertRegisterContext } from "./Alerts";
 
@@ -48,7 +49,6 @@ function Greeting() {
                 { loggedIn
                     ? <p>Welcome {user?.name}!</p> 
                     : <GoogleLogin
-                        clientId={process.env.REACT_APP_CLIENT_ID}
                         onSuccess={responseGoogleSuccess}
                         onFailure={responseGoogleFailure}
                         cookiePolicy={'single_host_origin'}
