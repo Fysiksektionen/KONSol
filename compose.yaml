@@ -1,0 +1,22 @@
+services:
+  konsol-backend:
+    build: .
+    container_name: backend
+    #image: ghcr.io/fysiksektionen/KONSol
+    ports: 
+     - 8888:8888
+    command: bash -c /usr/src/app/start.sh
+    env_file: .env
+    restart: unless-stopped
+  mongodb:
+    image: mongo
+    container_name: mongodb
+    ports:
+      - 27017:27017
+    volumes:
+      - mongodb:/data/db
+    env_file: .env
+    restart: unless-stopped
+
+volumes:
+  mongodb:
