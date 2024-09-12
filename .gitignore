@@ -2,3 +2,6 @@
 README.md.save
 node_modules
 uploads
+
+.env
+service_account_auth_file.json

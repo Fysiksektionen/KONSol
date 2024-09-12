@@ -1,21 +1,12 @@
 {
-    "PORT":"8888",
-    "service_url":"http://localhost:8888",
-    "cas_url":"https://login.kth.se",
-    "session_name":"cas_user",
-    "session_info":"cas_userinfo",
     "uploads_path":"./client/public/img",
     "debug":true,
     "DB_URL":"mongodb://localhost:27017/KONSol",
-    "dev_mode":true,
+    "dev_mode":false,
     "dev_mode_is_admin":true,
-    "dev_mode_user":"fdev",
-    "dev_mode_info":{"givenName":"web","familyName":"grupp","id":"abc1234"},
-    "OAuth":{
-        "REDIRECT_URI":"http://localhost:8888/instagram/callback",
-        "FRONTEND_URI":"http://localhost:8888/instagram"
-    },
-    "admin_users":[
-        "yasharh"
-    ]
+    "dev_mode_user":"fdev@fysiksektionen.se",
+    "OAuth": {
+        "REDIRECT_URI":"/instagram/callback",
+        "FRONTEND_URI":"/instagram"
+    }
 }

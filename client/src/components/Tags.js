@@ -9,14 +9,14 @@ class Tags extends Component {
         this.saveTags = this.saveTags.bind(this)
     }
     componentDidMount(){
-        fetch('/api/screen')
+        fetch(process.env.REACT_APP_ROOT_URL_PATH + '/api/screen')
         .then(res => {
           if (res.ok || res.status === 304) {
             return res.json()
           }
           else {
             this.props.addAlert({type:"error", message:"Error: Could not load current tags"}) 
-            return []
+            return {tags: []}
           }
         })
         .then(response => this.setState({tags: response.tags.join(" ")}))
@@ -38,7 +38,7 @@ class Tags extends Component {
                 'Content-Type': 'application/json'
             }
         }
-        fetch('api/screen', options)
+        fetch(process.env.REACT_APP_ROOT_URL_PATH + '/api/screen', options)
             .then(res => res.json())
             .then(res => {
                 if (res.ok) this.props.addAlert({type:"success", message:"Saved tags!"})
