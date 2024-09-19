@@ -27,7 +27,7 @@ function Greeting() {
     function responseGoogleSuccess(callbackData) {
         fetch(process.env.REACT_APP_ROOT_URL_PATH + '/login', {
             method: 'POST',
-            body: JSON.stringify({token: callbackData.tokenId}),
+            body: JSON.stringify({token: callbackData.credential}),
             headers: {
                 Accept: 'application/json',
                 'Content-Type': 'application/json',

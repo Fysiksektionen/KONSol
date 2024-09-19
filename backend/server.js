@@ -11,7 +11,6 @@ const mongoose = require('mongoose')
 const bodyParser = require('body-parser')
 const MongoStore = require('connect-mongo');
 const cors = require('cors')
-const csrf = require('csurf')
 
 
 // #File uploading dependencies
@@ -80,7 +79,7 @@ app.use(bodyParser.json())
 
 // Production use of the react build
 if (process.env.KONSOL_NODE_ENV === 'production') {
-    app.set('static_folder', 'client/build')
+    app.set('static_folder', 'client_build')
     app.use(express.static(app.get('static_folder')))
 }
 else {
@@ -100,24 +99,24 @@ app.use(session({
     secret: process.env.SESSION_SECRET,
     resave: false,
     saveUninitialized: false,
-    store: new MongoStore({ mongoUrl: settings.DB_URL, mongooseConnection: db }),
+    store: store, // Use the previously defined store
     cookie: { secure: process.env.KONSOL_NODE_ENV === "production", maxAge: halfDay },
+    a: console.log(process.env.KONSOL_NODE_ENV),
 }));
 
-
-app.use(csrf());
-app.use((req, res, next) => {
-    //TODO: should also set express trust proxy to 1 in production (since under apache proxy).
-    const cookie_options = process.env.KONSOL_NODE_ENV === 'production' ? { sameSite: true } : {}
-    res.cookie('XSRF-TOKEN', req.csrfToken(), cookie_options);
-    next();
-});
+// app.use((req, res, next) => {
+//     //TODO: should also set express trust proxy to 1 in production (since under apache proxy).
+//     const cookie_options = process.env.KONSOL_NODE_ENV === 'production' ? { sameSite: true } : {}
+//     req.locals._csrf = req.csrfToken()
+//     next();
+// });
 
 // ####################################################################
 //            Middleware
 // ####################################################################
 
 const requireLoggedIn = (req, res, next) => {
+    console.log(req.session.id);
     if (req.session?.authenticated) {
         next();
     } else {
@@ -156,6 +155,10 @@ app.post('/api/screen/slides/save', requireLoggedIn, function (req, res) {
 
 app.get('/instagram', requireLoggedIn, instagram.update)
 
+app.get("/csrf-token", (req, res) => {
+    res.json({token: generateToken(req)})
+})
+
 // ####################################################################
 //            API for the screen
 // ####################################################################
@@ -176,6 +179,7 @@ app.post('/login', (req, res) => {
         .then(user => auth.checkPermissionToAccess(user.id) ? user : undefined)
         .then(user => {
             if (user) {
+                console.log("DÄR!");
                 req.session.authenticated = true;
                 req.session.user = user;
                 res.status(200).json({ loggedIn: true, user: req.session.user });
@@ -190,7 +194,7 @@ app.post('/logout', (req, res) => {
     res.json({ loggedIn: false });
 })
 
-app.get('/me', requireLoggedIn, (req, res) => {
+app.get('/me', [requireLoggedIn], (req, res) => {
     res.json({
         user: req.session.user
     });
